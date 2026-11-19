@@ -15,7 +15,7 @@ export interface ShapeInfo {
   id: string
   parent: string
   type: string
-  container: boolean
+  container: string
   x: number
   y: number
   w: number

@@ -3,7 +3,7 @@ import { hitTest, screenToDiagram } from './coords'
 import type { ShapeInfo } from './protocol'
 
 const sh = (id: string, x: number, y: number, w: number, h: number): ShapeInfo => ({
-  id, parent: '', type: 'rectangle', container: false, x, y, w, h, pinned: false, pinnable: true,
+  id, parent: '', type: 'rectangle', container: "", x, y, w, h, pinned: false, pinnable: true,
 })
 
 describe('coords', () => {
