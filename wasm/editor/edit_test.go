@@ -179,3 +179,17 @@ func TestEditOnBrokenTextFails(t *testing.T) {
 		}
 	}
 }
+
+func TestSetShapeDropsRefusedStyles(t *testing.T) {
+	in := "a: {style: {3d: true; double-border: true; shadow: true}}"
+
+	out := must(t)(Set(in, "a", "shape", ptr("cylinder")))
+	if strings.Contains(out, "3d") || strings.Contains(out, "double-border") || !strings.Contains(out, "shadow") {
+		t.Fatal(out)
+	}
+
+	out = must(t)(Set(in, "a", "shape", ptr("square")))
+	if !strings.Contains(out, "3d") || !strings.Contains(out, "double-border") {
+		t.Fatal(out)
+	}
+}
