@@ -8,7 +8,7 @@ import (
 	"github.com/d2lang/d2/d2oracle"
 )
 
-var shapeLine = regexp.MustCompile(`(?m)^\s*shape:\s*([\w-]+)`)
+var shapeLine = regexp.MustCompile(`\bshape:\s*([\w-]+)`)
 
 // Insert adds template under parent. Every "$" in template becomes the new
 // object's id, which is unique like in Create.

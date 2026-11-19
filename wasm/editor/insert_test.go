@@ -95,3 +95,14 @@ func TestInsertUniqueKey(t *testing.T) {
 		t.Fatalf("%q %q %v", a, b, err)
 	}
 }
+
+func TestInsertKeyFromInlineShape(t *testing.T) {
+	_, id, err := Insert("", "", "$: {shape: rectangle}")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if id != "rectangle" {
+		t.Fatalf("id = %q, want rectangle", id)
+	}
+}
