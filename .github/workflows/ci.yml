@@ -1,40 +1,41 @@
-name: pages
+name: ci
 
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      version:
+        description: Version shown in the app
+        type: string
+        default: dev
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: false
 
 jobs:
-  build:
+  check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
         with:
           go-version-file: wasm/go.mod
           cache-dependency-path: wasm/go.sum
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: web/package-lock.json
       - name: Lint native
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
         with:
           version: v2.15.0
           working-directory: wasm
       - name: Lint wasm
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
         with:
           version: v2.15.0
           working-directory: wasm
@@ -45,23 +46,17 @@ jobs:
         run: cd wasm && go test ./...
       - name: Build wasm and licenses
         run: bash wasm/scripts/build.sh
-      - name: Web checks
+      - name: Web checks and build
+        env:
+          VERSION: ${{ inputs.version || 'dev' }}
         run: |
           cd web
           npm ci
           npm run check
           npx vitest run
           npm run build
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-artifact@v7
         with:
+          name: dist
           path: web/dist
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+          retention-days: 7

@@ -1,0 +1,32 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Shown in the top bar, next to Licenses
+      placeholder: v0.1.0
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and OS
+      placeholder: Firefox 140 on macOS
+    validations:
+      required: true
+  - type: textarea
+    id: d2
+    attributes:
+      label: D2 code
+      description: The smallest diagram that shows the problem
+      render: d2
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps
+      description: What you did, what you expected and what happened instead
+    validations:
+      required: true
