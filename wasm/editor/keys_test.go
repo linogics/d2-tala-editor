@@ -38,6 +38,7 @@ func TestSetKeyVars(t *testing.T) {
 	}
 
 	out = mustKey(t, out, []string{"vars", "d2-config", "sketch"}, nil)
+
 	out = mustKey(t, out, []string{"vars", "d2-config", "theme-overrides"}, nil)
 	if strings.Contains(out, "vars") {
 		t.Fatalf("empty maps kept:\n%s", out)
@@ -101,6 +102,7 @@ func TestSetKeyBareClass(t *testing.T) {
 	if len(cs) != 1 || cs[0].Name != "x" {
 		t.Fatalf("classes %+v:\n%s", cs, out)
 	}
+
 	out = mustKey(t, out, []string{"classes", "x", "style", "fill"}, ptr("red"))
 	if strings.Count(out, "x") != 1 {
 		t.Fatalf("bare key kept:\n%s", out)

@@ -146,6 +146,7 @@ func deleteKey(m *d2ast.Map, path []string) {
 func insertKey(m *d2ast.Map, path []string, value string) error {
 	for i := len(m.Nodes) - 1; i >= 0; i-- {
 		k := m.Nodes[i].MapKey
+
 		ps := keyPath(k)
 		if ps == nil || len(ps) >= len(path) || !prefixOf(ps, path) {
 			continue
@@ -243,6 +244,7 @@ func classes(m *d2ast.Map) []ClassInfo {
 	byName := map[string]int{}
 
 	var walk func(m *d2ast.Map, prefix []string)
+
 	walk = func(m *d2ast.Map, prefix []string) {
 		for _, n := range m.Nodes {
 			ps := keyPath(n.MapKey)
@@ -257,10 +259,12 @@ func classes(m *d2ast.Map) []ClassInfo {
 
 			if len(p) >= 2 {
 				name := strings.ToLower(p[1])
+
 				i, ok := byName[name]
 				if !ok {
 					i = len(out)
 					byName[name] = i
+
 					out = append(out, ClassInfo{Name: p[1], Attrs: map[string]string{}})
 				}
 
@@ -287,6 +291,7 @@ func setClassList(text, id, list string) (string, error) {
 	}
 
 	const placeholder = "d2te-class-placeholder"
+
 	out, err := Set(text, id, "class", ptr(placeholder))
 	if err != nil {
 		return "", err
