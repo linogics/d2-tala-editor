@@ -50,6 +50,10 @@ export function createAppState(engine: Engine) {
         return null
       }
     },
+    // Replaces the document through the editor, so undo restores the old code.
+    replaceCode(text: string) {
+      sink(text)
+    },
     registerCodeSink(fn: (text: string) => void) {
       sink = fn
     },
