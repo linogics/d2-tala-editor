@@ -24,7 +24,8 @@ func setPos(g *d2graph.Graph, id string, x, y int) (*d2graph.Graph, error) {
 	if o == nil || !pinnable(o) {
 		return nil, ErrNotPinnable
 	}
-	top, left := strconv.Itoa(y), strconv.Itoa(x)
+	// The compiler rejects negative top and left.
+	top, left := strconv.Itoa(max(y, 0)), strconv.Itoa(max(x, 0))
 	g, err := d2oracle.Set(g, nil, id+".top", nil, &top)
 	if err != nil {
 		return nil, err
@@ -77,6 +78,8 @@ func Unpin(text, id string) (string, error) {
 }
 
 // PinAll renders once and pins every pinnable shape where it was laid out.
+// Nested shapes are pinned at 0, 0 first, then converted to offsets from their
+// parent's position using a probe render.
 func PinAll(ctx context.Context, text string) (string, error) {
 	if _, err := compile(text); err != nil {
 		return "", err
@@ -86,12 +89,31 @@ func PinAll(ctx context.Context, text string) (string, error) {
 		return "", err
 	}
 	return edit(text, func(g *d2graph.Graph) (*d2graph.Graph, error) {
+		var nested []ShapeInfo
 		for _, s := range r.Shapes {
 			if !s.Pinnable {
 				continue
 			}
+			x, y := s.X, s.Y
+			if s.Parent != "" {
+				nested = append(nested, s)
+				x, y = 0, 0
+			}
 			var err error
-			if g, err = setPos(g, s.ID, s.X, s.Y); err != nil {
+			if g, err = setPos(g, s.ID, x, y); err != nil {
+				return nil, err
+			}
+		}
+		if len(nested) == 0 {
+			return g, nil
+		}
+		probe, err := Render(ctx, d2format.Format(g.AST), RenderOpts{Seeds: []int64{1}})
+		if err != nil {
+			return nil, err
+		}
+		for _, s := range nested {
+			c, p, pa := shapeByID(probe, s.ID), shapeByID(probe, s.Parent), shapeByID(r, s.Parent)
+			if g, err = setPos(g, s.ID, s.X-pa.X-(c.X-p.X), s.Y-pa.Y-(c.Y-p.Y)); err != nil {
 				return nil, err
 			}
 		}

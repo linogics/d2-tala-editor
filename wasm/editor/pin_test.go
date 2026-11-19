@@ -60,3 +60,41 @@ func TestPinAllSkipsGridChildren(t *testing.T) {
 		t.Fatalf("grid child pinned:\n%s", out)
 	}
 }
+
+func TestPinClampsNegative(t *testing.T) {
+	out := must(t)(Pin("a", "a", -50, -10))
+	_, err := compile(out)
+	if err != nil || !strings.Contains(out, "top: 0") || !strings.Contains(out, "left: 0") {
+		t.Fatalf("%q %v", out, err)
+	}
+	out = must(t)(Pin("c: {x}\ny", "c.x", -500, -500))
+	if _, err := compile(out); err != nil {
+		t.Fatalf("%q %v", out, err)
+	}
+}
+
+func TestPinAllNestedKeepsPositions(t *testing.T) {
+	const in = "c: {x -> y}\nz -> c"
+	before := mustRender(t, in, RenderOpts{})
+	out, err := PinAll(context.Background(), in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := compile(out); err != nil {
+		t.Fatalf("%q %v", out, err)
+	}
+	after := mustRender(t, out, RenderOpts{})
+	for _, id := range []string{"c.x", "c.y"} {
+		b, a := byID(before, id), byID(after, id)
+		if abs(a.X-b.X) > 2 || abs(a.Y-b.Y) > 2 {
+			t.Errorf("%s moved %d,%d to %d,%d\n%s", id, b.X, b.Y, a.X, a.Y, out)
+		}
+	}
+}
+
+func abs(n int) int {
+	if n < 0 {
+		return -n
+	}
+	return n
+}
