@@ -2,6 +2,7 @@ package editor
 
 import (
 	"errors"
+	"fmt"
 	"slices"
 	"strings"
 
@@ -189,6 +190,12 @@ func RenameClass(text, from, to string) (string, error) {
 	}
 
 	return keyEdit(text, func(m *d2ast.Map) error {
+		for _, c := range classes(m) {
+			if strings.EqualFold(c.Name, to) && !strings.EqualFold(c.Name, from) {
+				return fmt.Errorf("class %q already exists", c.Name)
+			}
+		}
+
 		renameDef(m, []string{"classes", from}, to)
 		d2ast.Walk(m, func(n d2ast.Node) bool {
 			k, ok := n.(*d2ast.Key)
@@ -296,7 +303,7 @@ func renameDef(m *d2ast.Map, path []string, to string) {
 
 // classes lists the top level class definitions with their attributes flattened to paths.
 func classes(m *d2ast.Map) []ClassInfo {
-	var out []ClassInfo
+	out := []ClassInfo{}
 
 	byName := map[string]int{}
 

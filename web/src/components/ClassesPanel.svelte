@@ -22,9 +22,11 @@
   }
 
   async function rename(e: Event) {
-    const to = (e.currentTarget as HTMLInputElement).value.trim()
-    if (!to || to === cls!.name) return
-    if (await app.applyEdit('renameClass', { from: cls!.name, to })) picked = to
+    const el = e.currentTarget as HTMLInputElement
+    const to = el.value.trim()
+    // A blank or refused name puts the current one back.
+    if (to && to !== cls!.name && (await app.applyEdit('renameClass', { from: cls!.name, to }))) picked = to
+    else el.value = cls!.name
   }
 
   function set(attr: string, v: string) {

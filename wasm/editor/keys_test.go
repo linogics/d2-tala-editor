@@ -162,3 +162,14 @@ func TestDeleteClassDropsRefs(t *testing.T) {
 		t.Fatalf("got:\n%s\nwant:\n%s", out, want)
 	}
 }
+
+func TestRenameClassRefusesExisting(t *testing.T) {
+	if _, err := RenameClass("classes: {a; b}\nx.class: a", "a", "B"); err == nil {
+		t.Fatal("rename onto existing class must fail")
+	}
+
+	out, err := RenameClass("classes: {a; b}\nx.class: a", "a", "A")
+	if err != nil || out != "classes: {A; b}\nx.class: A\n" {
+		t.Fatalf("case rename: %q %v", out, err)
+	}
+}

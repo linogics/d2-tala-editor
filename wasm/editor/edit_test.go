@@ -193,3 +193,35 @@ func TestSetShapeDropsRefusedStyles(t *testing.T) {
 		t.Fatal(out)
 	}
 }
+
+func TestRefusalIsShort(t *testing.T) {
+	_, err := Set("a: {shape: image; icon: https://x.com/a.svg}", "a", "icon", nil)
+	if err == nil || err.Error() != `image shape must include an "icon" field` {
+		t.Fatalf("got %v", err)
+	}
+}
+
+func TestSetReplacesIconAndNear(t *testing.T) {
+	v := "https://b.com/y.svg"
+
+	out, err := Set("a: {shape: image; icon: https://a.com/x.svg}", "a", "icon", &v)
+	if err != nil || strings.Count(out, "icon:") != 1 || !strings.Contains(out, v) {
+		t.Fatalf("icon: %q %v", out, err)
+	}
+
+	n := "top-right"
+
+	out, err = Set("a.near: top-left", "a", "near", &n)
+	if err != nil || out != "a.near: top-right\n" {
+		t.Fatalf("near: %q %v", out, err)
+	}
+}
+
+func TestShapeChangeDropsConstraints(t *testing.T) {
+	r := "rectangle"
+
+	out, err := Set("t: {shape: sql_table; id: int {constraint: primary_key}; n: varchar}", "t", "shape", &r)
+	if err != nil || out != "t: {shape: rectangle; id: int; n: varchar}\n" {
+		t.Fatalf("%q %v", out, err)
+	}
+}
