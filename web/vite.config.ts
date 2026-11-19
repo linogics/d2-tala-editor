@@ -5,5 +5,5 @@ export default defineConfig({
   base: './',
   plugins: [svelte()],
   // Svelte must resolve its browser build for mount() in jsdom tests.
-  resolve: { conditions: process.env.VITEST ? ['browser'] : [] },
+  ...(process.env.VITEST ? { resolve: { conditions: ['browser'] } } : {}),
 })
