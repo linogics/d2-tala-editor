@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Hello",
+    "code": "a: Hello\nb: World\nc: !\na -> b\nb -> c"
+  },
+  {
+    "name": "Pinned layout",
+    "code": "a: {top: 0\n  left: 0}\nb: {top: 100\n  left: 200}\na -> b"
+  },
+  {
+    "name": "SQL tables",
+    "code": "users: {\n  shape: sql_table\n  id: int {constraint: primary_key}\n  name: varchar\n}\norders: {\n  shape: sql_table\n  id: int {constraint: primary_key}\n  user_id: int {constraint: foreign_key}\n}\norders.user_id -> users.id"
+  },
+  {
+    "name": "Sequence",
+    "code": "s: {\n  shape: sequence_diagram\n  alice\n  bob\n  alice -> bob: hi\n  bob -> alice: hello\n}"
+  },
+  {
+    "name": "Grid",
+    "code": "g: {\n  grid-columns: 2\n  a\n  b\n  c\n  d\n}"
+  },
+  {
+    "name": "Text, code, LaTeX",
+    "code": "t: |md\n  # Title\n|\nc: |go\n  func main() {}\n|\nm: |latex\n  E = mc^2\n|"
+  },
+  {
+    "name": "Icons",
+    "code": "a: {shape: image\n  icon: https://icons.terrastruct.com/essentials/004-picture.svg\n}\nb: Server {icon: https://icons.terrastruct.com/essentials/112-server.svg}\na -> b"
+  }
+]

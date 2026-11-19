@@ -1,0 +1,158 @@
+[
+  {
+    "key": "rectangle",
+    "label": "Rectangle",
+    "group": "shape",
+    "template": "$: {shape: rectangle}"
+  },
+  {
+    "key": "square",
+    "label": "Square",
+    "group": "shape",
+    "template": "$: {shape: square}"
+  },
+  {
+    "key": "page",
+    "label": "Page",
+    "group": "shape",
+    "template": "$: {shape: page}"
+  },
+  {
+    "key": "parallelogram",
+    "label": "Parallelogram",
+    "group": "shape",
+    "template": "$: {shape: parallelogram}"
+  },
+  {
+    "key": "document",
+    "label": "Document",
+    "group": "shape",
+    "template": "$: {shape: document}"
+  },
+  {
+    "key": "cylinder",
+    "label": "Cylinder",
+    "group": "shape",
+    "template": "$: {shape: cylinder}"
+  },
+  {
+    "key": "queue",
+    "label": "Queue",
+    "group": "shape",
+    "template": "$: {shape: queue}"
+  },
+  {
+    "key": "package",
+    "label": "Package",
+    "group": "shape",
+    "template": "$: {shape: package}"
+  },
+  {
+    "key": "step",
+    "label": "Step",
+    "group": "shape",
+    "template": "$: {shape: step}"
+  },
+  {
+    "key": "callout",
+    "label": "Callout",
+    "group": "shape",
+    "template": "$: {shape: callout}"
+  },
+  {
+    "key": "stored_data",
+    "label": "Stored Data",
+    "group": "shape",
+    "template": "$: {shape: stored_data}"
+  },
+  {
+    "key": "person",
+    "label": "Person",
+    "group": "shape",
+    "template": "$: {shape: person}"
+  },
+  {
+    "key": "diamond",
+    "label": "Diamond",
+    "group": "shape",
+    "template": "$: {shape: diamond}"
+  },
+  {
+    "key": "oval",
+    "label": "Oval",
+    "group": "shape",
+    "template": "$: {shape: oval}"
+  },
+  {
+    "key": "circle",
+    "label": "Circle",
+    "group": "shape",
+    "template": "$: {shape: circle}"
+  },
+  {
+    "key": "hexagon",
+    "label": "Hexagon",
+    "group": "shape",
+    "template": "$: {shape: hexagon}"
+  },
+  {
+    "key": "cloud",
+    "label": "Cloud",
+    "group": "shape",
+    "template": "$: {shape: cloud}"
+  },
+  {
+    "key": "c4-person",
+    "label": "C4 Person",
+    "group": "shape",
+    "template": "$: {shape: c4-person}"
+  },
+  {
+    "key": "markdown",
+    "label": "Markdown text",
+    "group": "special",
+    "template": "$: |md\n  # Title\n  Some text\n|"
+  },
+  {
+    "key": "code",
+    "label": "Code block",
+    "group": "special",
+    "template": "$: |go\n  func main() {}\n|"
+  },
+  {
+    "key": "latex",
+    "label": "LaTeX",
+    "group": "special",
+    "template": "$: |latex\n  E = mc^2\n|"
+  },
+  {
+    "key": "image",
+    "label": "Image",
+    "group": "special",
+    "template": "$: {\n  shape: image\n  icon: https://icons.terrastruct.com/essentials/004-picture.svg\n}"
+  },
+  {
+    "key": "sql_table",
+    "label": "SQL table",
+    "group": "special",
+    "template": "$: {\n  shape: sql_table\n  id: int {constraint: primary_key}\n  name: varchar\n}"
+  },
+  {
+    "key": "class",
+    "label": "Class",
+    "group": "special",
+    "template": "$: {\n  shape: class\n  field: string\n  method(): void\n}"
+  },
+  {
+    "key": "sequence_diagram",
+    "label": "Sequence diagram",
+    "group": "special",
+    "template": "$: {\n  shape: sequence_diagram\n  a\n  b\n  a -> b: hello\n}"
+  },
+  {
+    "key": "grid",
+    "label": "Grid",
+    "group": "special",
+    "template": "$: {\n  grid-columns: 2\n  a\n  b\n  c\n  d\n}"
+  }
+]
