@@ -31,12 +31,12 @@ jobs:
       - name: Lint native
         uses: golangci/golangci-lint-action@v8
         with:
-          version: latest
+          version: v2.15.0
           working-directory: wasm
       - name: Lint wasm
         uses: golangci/golangci-lint-action@v8
         with:
-          version: latest
+          version: v2.15.0
           working-directory: wasm
         env:
           GOOS: js
