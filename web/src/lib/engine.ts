@@ -6,6 +6,13 @@ export interface Engine {
   onProgress(cb: (loaded: number, total: number) => void): void
 }
 
+export function createWorker(): Worker {
+  const w = new Worker(new URL('./worker.ts', import.meta.url), { type: 'classic' })
+  w.postMessage({ type: 'init', base: new URL(import.meta.env.BASE_URL, document.baseURI).href })
+
+  return w
+}
+
 export function createEngine(worker: Worker): Engine {
   let nextId = 1
   const pending = new Map<number, (json: string) => void>()
@@ -23,7 +30,8 @@ export function createEngine(worker: Worker): Engine {
   return {
     ready,
     onProgress: (cb) => void progress.push(cb),
-    call<O extends Op>(op: O, args: ArgsOf<O>) {
+    async call<O extends Op>(op: O, args: ArgsOf<O>) {
+      await ready
       const id = nextId++
 
       return new Promise<ResultOf<O>>((resolve, reject) => {

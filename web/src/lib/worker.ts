@@ -1,12 +1,9 @@
 /// <reference lib="webworker" />
 declare const d2editor: { call(op: string, args: string): string }
 
-// Base is the worker script dir in dev and the app root in build, so use the page-relative root.
-const base = new URL('.', self.location.href).href.replace(/assets\/$/, '').replace(/src\/lib\/$/, '')
+async function load(base: string) {
+  importScripts(base + 'wasm_exec.js')
 
-importScripts(base + 'wasm_exec.js')
-
-async function load() {
   const res = await fetch(base + 'editor.wasm')
   const total = Number(res.headers.get('content-length')) || 0
   const reader = res.body!.getReader()
@@ -27,9 +24,22 @@ async function load() {
   go.run(instance)
 }
 
-onmessage = (e: MessageEvent<{ id: number; op: string; args: unknown }>) => {
-  const { id, op, args } = e.data
-  postMessage({ id, json: d2editor.call(op, JSON.stringify(args)) })
-}
+onmessage = (e: MessageEvent<{ type?: string; base?: string; id: number; op: string; args: unknown }>) => {
+  const m = e.data
 
-load()
+  if (m.type === 'init') {
+    void load(m.base!)
+
+    return
+  }
+
+  let json: string
+
+  try {
+    json = d2editor.call(m.op, JSON.stringify(m.args))
+  } catch (err) {
+    json = JSON.stringify({ ok: false, error: { code: 'internal', message: String(err), diag: null } })
+  }
+
+  postMessage({ id: m.id, json })
+}

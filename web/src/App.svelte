@@ -1,9 +1,7 @@
 <script lang="ts">
-  import { createEngine } from './lib/engine'
+  import { createEngine, createWorker } from './lib/engine'
 
-  const engine = createEngine(
-    new Worker(new URL('./lib/worker.ts', import.meta.url), { type: 'classic' }),
-  )
+  const engine = createEngine(createWorker())
   let ready = $state(false)
   engine.ready.then(() => (ready = true))
 </script>
