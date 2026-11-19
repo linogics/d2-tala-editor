@@ -116,7 +116,7 @@
         {#each app.render?.edges ?? [] as ed (ed.id)}
           <polyline
             data-edge={ed.id}
-            points={ed.points.map((p) => `${p.x},${p.y}`).join(' ')}
+            points={ed.points.map(([x, y]) => `${x},${y}`).join(' ')}
             class:sel={isSel('edge', ed.id)}
             onpointerdown={(e) => selectEdge(e, ed.id)}
           />

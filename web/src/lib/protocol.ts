@@ -28,7 +28,7 @@ export interface EdgeInfo {
   id: string
   src: string
   dst: string
-  points: { x: number; y: number }[]
+  points: [number, number][]
 }
 
 export interface RenderResult {
