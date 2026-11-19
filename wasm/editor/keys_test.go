@@ -29,6 +29,10 @@ func TestSetKeyVars(t *testing.T) {
 		t.Fatalf("override not set:\n%s", out)
 	}
 
+	if !strings.Contains(strings.ToLower(r.SVG), "#ff0000") {
+		t.Fatal("override missing from svg")
+	}
+
 	if strings.Count(out, "vars") != 1 {
 		t.Fatalf("second vars block:\n%s", out)
 	}

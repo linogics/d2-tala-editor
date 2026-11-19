@@ -6,7 +6,7 @@
   import TopBar from './components/TopBar.svelte'
   import Palette from './components/Palette.svelte'
   import Canvas from './components/Canvas.svelte'
-  import Properties from './components/Properties.svelte'
+  import Side from './components/Side.svelte'
   import CodePane from './components/CodePane.svelte'
 
   const app = createAppState(createEngine(createWorker()))
@@ -59,7 +59,7 @@
     <div class="cols">
       <Palette />
       <Canvas state={app} />
-      <Properties state={app} />
+      <Side state={app} />
       <CodePane state={app} />
     </div>
   </div>
