@@ -7,8 +7,8 @@ import CodePane from '../components/CodePane.svelte'
 import { createAppState } from './state.svelte'
 import { EngineError, type RenderResult } from './protocol'
 
-const good: RenderResult = { svg: '<svg/>', shapes: [], edges: [], errors: [] }
-const bad: RenderResult = { svg: '', shapes: [], edges: [], errors: [{ line: 0, col: 3, message: 'oops' }] }
+const good: RenderResult = { svg: '<svg/>', shapes: [], edges: [], errors: [], config: null, classes: [] }
+const bad: RenderResult = { svg: '', shapes: [], edges: [], errors: [{ line: 0, col: 3, message: 'oops' }], config: null, classes: [] }
 
 function fake(handler: (op: string, args: any) => any) {
   return { call: vi.fn(async (op: string, args: any) => handler(op, args)), ready: Promise.resolve(), onProgress() {} } as any

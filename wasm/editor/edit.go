@@ -97,7 +97,12 @@ func Create(text, parent, shape string) (string, string, error) {
 }
 
 // Set sets attr (relative to id) to value, or deletes it when value is nil.
+// A class value in array form ("[a; b]") is written as a D2 array.
 func Set(text, id, attr string, value *string) (string, error) {
+	if attr == "class" && value != nil && strings.HasPrefix(*value, "[") {
+		return setClassList(text, id, *value)
+	}
+
 	return edit(text, func(g *d2graph.Graph) (*d2graph.Graph, error) {
 		if value == nil && attr == "label" {
 			// Delete misses the inline form ("a: A"), Set with nil clears it.

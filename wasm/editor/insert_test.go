@@ -30,7 +30,7 @@ func TestEveryTemplateInserts(t *testing.T) {
 
 	loadJSON(t, "templates.json", &ts)
 
-	if len(ts) != 26 {
+	if len(ts) != 28 {
 		t.Fatalf("got %d templates", len(ts))
 	}
 

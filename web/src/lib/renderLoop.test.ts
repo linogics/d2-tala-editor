@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { createRenderLoop } from './renderLoop'
 import type { RenderResult } from './protocol'
 
-const res = (svg: string): RenderResult => ({ svg, shapes: [], edges: [], errors: [] })
+const res = (svg: string): RenderResult => ({ svg, shapes: [], edges: [], errors: [], config: null, classes: [] })
 
 function setup(fastMode: boolean) {
   const calls: { args: any; resolve: (r: RenderResult) => void }[] = []

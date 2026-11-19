@@ -30,11 +30,11 @@ function change(el: Element, value: string) {
 }
 
 describe('palette and properties', () => {
-  it('palette lists 18 shapes and 8 special objects', () => {
+  it('palette lists 19 shapes and 9 special objects', () => {
     const target = document.createElement('div')
     mount(Palette, { target })
     flushSync()
-    expect(target.querySelectorAll('.item').length).toBe(26)
+    expect(target.querySelectorAll('.item').length).toBe(28)
     expect(target.querySelectorAll('h4').length).toBe(2)
   })
 

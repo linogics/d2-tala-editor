@@ -1,6 +1,8 @@
 package editor
 
 import (
+	"strings"
+
 	"github.com/d2lang/d2/d2format"
 	"github.com/d2lang/d2/d2graph"
 )
@@ -23,6 +25,10 @@ func attrs(a *d2graph.Attributes) map[string]string {
 		if v != nil && v.MapKey != nil {
 			m[k] = v.Value
 		}
+	}
+
+	if len(a.Classes) > 0 {
+		m["class"] = strings.Join(a.Classes, ";")
 	}
 
 	if a.Icon != nil {

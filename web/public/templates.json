@@ -108,6 +108,12 @@
     "template": "$: {shape: c4-person}"
   },
   {
+    "key": "text",
+    "label": "Text",
+    "group": "shape",
+    "template": "$: {shape: text}"
+  },
+  {
     "key": "markdown",
     "label": "Markdown text",
     "group": "special",
@@ -154,5 +160,11 @@
     "label": "Grid",
     "group": "special",
     "template": "$: {\n  grid-columns: 2\n  a\n  b\n  c\n  d\n}"
+  },
+  {
+    "key": "hierarchy",
+    "label": "Hierarchy",
+    "group": "special",
+    "template": "$: {\n  shape: hierarchy\n  a\n  b\n  c\n  a -> b\n  a -> c\n}"
   }
 ]

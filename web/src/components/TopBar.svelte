@@ -2,7 +2,7 @@
   import type { AppState } from '../lib/state.svelte'
   import type { ThemeInfo } from '../lib/protocol'
   import { themeIdOf, withTheme } from '../lib/theme'
-  import { currentMode, setMode, type Mode } from '../lib/mode'
+  import { setMode } from '../lib/mode'
 
   let { app, examples }: { app: AppState; examples: { name: string; code: string }[] } = $props()
 
@@ -11,11 +11,14 @@
 
   const themeId = $derived(themeIdOf(app.code))
 
-  let mode = $state<Mode>(currentMode())
+  const mode = $derived(app.mode)
   function toggleMode() {
-    mode = mode === 'dark' ? 'light' : 'dark'
-    setMode(mode)
+    app.mode = mode === 'dark' ? 'light' : 'dark'
+    setMode(app.mode)
   }
+
+  const sketch = $derived(!!app.render?.config?.sketch)
+  const toggleSketch = () => app.applyEdit('setKey', { path: ['vars', 'd2-config', 'sketch'], value: sketch ? null : 'true' })
 
   function setTheme(e: Event) {
     app.replaceCode(withTheme(app.code, Number((e.target as HTMLSelectElement).value)))
@@ -65,6 +68,9 @@
         {#each themes.filter((t) => t.dark) as t (t.id)}<option value={t.id}>{t.name}</option>{/each}
       </optgroup>
     </select>
+    <button class="icon" class:on={sketch} aria-pressed={sketch} title="Sketch style" aria-label="Sketch style" onclick={toggleSketch}>
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 20l1.2-4.6L16.5 4.1a2 2 0 0 1 2.8 0l.6.6a2 2 0 0 1 0 2.8L8.6 18.8z M14.5 6l3.5 3.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" /><path d="M13 20c2-1 4 1 7-1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" /></svg>
+    </button>
     <select aria-label="Examples" value="" onchange={pickExample}>
       <option value="" disabled>Examples</option>
       {#each examples as ex, i (i)}<option value={i}>{ex.name}</option>{/each}

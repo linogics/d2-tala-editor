@@ -29,6 +29,9 @@ type RenderResult struct {
 	Shapes []ShapeInfo `json:"shapes"`
 	Edges  []EdgeInfo  `json:"edges"`
 	Errors []Diag      `json:"errors"`
+	// Config is the compiled vars.d2-config, nil when the text sets none.
+	Config  *d2target.Config `json:"config"`
+	Classes []ClassInfo      `json:"classes"`
 }
 
 // ShapeInfo describes one laid out shape. Container describes the shape itself.
@@ -103,7 +106,7 @@ func container(obj *d2graph.Object) string {
 // Render compiles text, lays it out with TALA and renders it. Compile errors
 // go in the result. The returned error is only for internal failures.
 func Render(ctx context.Context, text string, opts RenderOpts) (RenderResult, error) {
-	res := RenderResult{Shapes: []ShapeInfo{}, Edges: []EdgeInfo{}, Errors: []Diag{}}
+	res := RenderResult{Shapes: []ShapeInfo{}, Edges: []EdgeInfo{}, Errors: []Diag{}, Classes: []ClassInfo{}}
 
 	r, err := sharedRuler()
 	if err != nil {
@@ -146,15 +149,22 @@ func Render(ctx context.Context, text string, opts RenderOpts) (RenderResult, er
 	}
 
 	svg, err := d2svg.Render(d, &d2svg.RenderOpts{
-		ThemeID:     d.Config.ThemeID,
-		DarkThemeID: d.Config.DarkThemeID,
-		Sketch:      d.Config.Sketch,
+		ThemeID:            d.Config.ThemeID,
+		DarkThemeID:        d.Config.DarkThemeID,
+		Sketch:             d.Config.Sketch,
+		ThemeOverrides:     d.Config.ThemeOverrides,
+		DarkThemeOverrides: d.Config.DarkThemeOverrides,
 	})
 	if err != nil {
 		return res, err
 	}
 
 	res.SVG = string(svg)
+	res.Config = d.Config
+
+	if g.AST != nil {
+		res.Classes = classes(g.AST)
+	}
 
 	objs := make(map[string]*d2graph.Object, len(g.Objects))
 	for _, o := range g.Objects {

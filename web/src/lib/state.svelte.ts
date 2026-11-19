@@ -1,4 +1,5 @@
 import type { Engine } from './engine'
+import type { Mode } from './mode'
 import { EngineError, type ArgsOf, type Diag, type Op, type RenderResult, type ResultOf } from './protocol'
 import { createRenderLoop, FAST_MODE } from './renderLoop'
 
@@ -22,6 +23,8 @@ export function createAppState(engine: Engine) {
     // Magnet: shows the grid and snaps dragged shapes to it.
     snap: false,
     grid: 20,
+    // App color mode, the theme panel edits the overrides of this mode.
+    mode: 'light' as Mode,
   })
   let sink: (text: string) => void = () => {}
 

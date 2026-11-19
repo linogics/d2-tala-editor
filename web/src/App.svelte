@@ -1,6 +1,7 @@
 <script lang="ts">
   import { createEngine, createWorker } from './lib/engine'
   import { createAppState } from './lib/state.svelte'
+  import { currentMode } from './lib/mode'
   import { loadGrid, loadInitial, saveCode, saveGrid } from './lib/persist'
   import TopBar from './components/TopBar.svelte'
   import Palette from './components/Palette.svelte'
@@ -21,7 +22,7 @@
     }
   })()
 
-  Object.assign(app, loadGrid(storage))
+  Object.assign(app, loadGrid(storage), { mode: currentMode() })
   $effect(() => saveGrid(storage, { snap: app.snap, grid: app.grid }))
 
   app.engine.onProgress((l, t) => ((loaded = l), (total = t)))

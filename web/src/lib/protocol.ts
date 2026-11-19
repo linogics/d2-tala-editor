@@ -39,12 +39,28 @@ export interface RenderResult {
   shapes: ShapeInfo[]
   edges: EdgeInfo[]
   errors: Diag[]
+  // Compiled vars.d2-config. Override keys are lowercase, such as "b1".
+  config: {
+    sketch: boolean | null
+    themeID: number | null
+    darkThemeID: number | null
+    themeOverrides?: Record<string, string | null>
+    darkThemeOverrides?: Record<string, string | null>
+  } | null
+  classes: ClassInfo[]
+}
+
+export interface ClassInfo {
+  name: string
+  attrs: Record<string, string>
 }
 
 export interface ThemeInfo {
   id: number
   name: string
   dark: boolean
+  // Override slot, such as "B1", to the theme's own color.
+  colors: Record<string, string>
 }
 
 export interface CompletionItem {
@@ -76,6 +92,9 @@ export interface Ops {
   format: { args: T; result: T }
   completions: { args: T & { line: number; col: number }; result: CompletionItem[] }
   refRanges: { args: Id; result: Range[] }
+  // Sets the scalar at a vars or classes path, null deletes it, "" writes a bare key.
+  setKey: { args: T & { path: string[]; value: string | null }; result: T }
+  renameClass: { args: T & { from: string; to: string }; result: T }
   themes: { args: Record<string, never>; result: ThemeInfo[] }
 }
 
