@@ -8,8 +8,6 @@ import (
 )
 
 // D2 renders these shapes under another type name.
-var aliases = map[string]string{"square": "rectangle", "circle": "oval"}
-
 type tmpl struct{ Key, Label, Group, Template string }
 
 func loadJSON(t *testing.T, name string, v any) {
@@ -56,13 +54,8 @@ func TestEveryTemplateInserts(t *testing.T) {
 				continue
 			}
 
-			want := m[1]
-			if a, ok := aliases[want]; ok {
-				want = a
-			}
-
-			if s.Type != want {
-				t.Fatalf("%s: type %q want %q", tp.Key, s.Type, want)
+			if s.Type != m[1] {
+				t.Fatalf("%s: type %q want %q", tp.Key, s.Type, m[1])
 			}
 		}
 	}

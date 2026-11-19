@@ -3,6 +3,7 @@ package editor
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"slices"
 	"strings"
 
@@ -62,11 +63,26 @@ func edit(text string, fn func(g *d2graph.Graph) (*d2graph.Graph, error)) (strin
 	}
 
 	if g, err = fn(g); err != nil {
-		return "", err
+		return "", refusal(err)
 	}
 
 	return d2format.Format(g.AST), nil
 }
+
+// refusal shortens an oracle "failed to recompile" error, which quotes the whole
+// rewritten text, to the compiler message without its position in that text.
+func refusal(err error) error {
+	msg := err.Error()
+	if !strings.Contains(msg, "failed to recompile") {
+		return err
+	}
+
+	last := msg[strings.LastIndex(msg, "\n")+1:]
+
+	return errors.New(recompilePos.ReplaceAllString(last, ""))
+}
+
+var recompilePos = regexp.MustCompile(`^\d+:\d+: `)
 
 func join(parent, key string) string {
 	if parent == "" {
@@ -123,7 +139,7 @@ func Set(text, id, attr string, value *string) (string, error) {
 		text = t
 	}
 
-	return edit(text, func(g *d2graph.Graph) (*d2graph.Graph, error) {
+	out, err := edit(text, func(g *d2graph.Graph) (*d2graph.Graph, error) {
 		if value == nil && attr == "label" {
 			// Delete misses the inline form ("a: A"), Set with nil clears it.
 			g, err := d2oracle.Set(g, nil, id, nil, nil)
@@ -140,6 +156,36 @@ func Set(text, id, attr string, value *string) (string, error) {
 
 		return d2oracle.Set(g, nil, join(id, attr), nil, value)
 	})
+	if err != nil || value == nil {
+		return out, err
+	}
+
+	return dedupe(out, id, attr)
+}
+
+// dedupe keeps only the last key at id.attr. The oracle appends a second
+// "icon" or "near" key instead of replacing the first, and the first then wins.
+func dedupe(text, id, attr string) (string, error) {
+	mk, err := d2parser.ParseMapKey(id)
+	if err != nil || len(mk.Edges) > 0 {
+		return text, nil
+	}
+
+	m, err := d2parser.Parse("", strings.NewReader(text), nil)
+	if err != nil {
+		return "", err
+	}
+
+	leaves := findLeaves(m, append(keyPath(mk), strings.Split(attr, ".")...))
+	if len(leaves) < 2 {
+		return text, nil
+	}
+
+	for _, l := range leaves[:len(leaves)-1] {
+		l.m.Nodes = slices.DeleteFunc(l.m.Nodes, func(n d2ast.MapNodeBox) bool { return n.MapKey == l.k })
+	}
+
+	return d2format.Format(m), nil
 }
 
 // styleShapes lists the only shapes D2 accepts each style on, see d2compiler validateKey.
@@ -148,7 +194,7 @@ var styleShapes = map[string][]string{
 	"double-border": {"rectangle", "square", "circle", "oval"},
 }
 
-// dropStyles removes the styles of shape id that D2 refuses on shape.
+// dropStyles removes the styles and column constraints of shape id that D2 refuses on shape.
 func dropStyles(text, id, shape string) (string, error) {
 	mk, err := d2parser.ParseMapKey(id)
 	if err != nil {
@@ -173,6 +219,21 @@ func dropStyles(text, id, shape string) (string, error) {
 
 			if g, err = d2oracle.Delete(g, nil, join(id, "style."+style)); err != nil {
 				return nil, err
+			}
+		}
+
+		if obj.SQLTable == nil || strings.EqualFold(shape, "sql_table") {
+			return g, nil
+		}
+		// Columns keep their name and type, only sql_table accepts a constraint.
+		for _, c := range obj.SQLTable.Columns {
+			if len(c.Constraint) == 0 {
+				continue
+			}
+
+			// The oracle does not see columns as objects, so the key goes from the AST.
+			for _, l := range findLeaves(g.AST, append(keyPath(mk), c.Name.Label, "constraint")) {
+				l.m.Nodes = slices.DeleteFunc(l.m.Nodes, func(n d2ast.MapNodeBox) bool { return n.MapKey == l.k })
 			}
 		}
 

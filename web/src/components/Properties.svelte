@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { AppState } from '../lib/state.svelte'
   import { templates } from '../lib/templates'
-  import { roots } from '../lib/group'
   import { arrowheads, edgeFields, fieldSteps, nears, shapeFieldsFor } from '../lib/fields'
   import FieldInput from './FieldInput.svelte'
 
@@ -65,8 +64,9 @@
 
       return
     }
-    // Children of a selected container go with it, deleting them first would fail.
-    if (await app.applyEdits(roots(ids).map((id) => ['delete', { id }]))) app.select(null)
+    // Deepest first, deleting a container first would lift its selected children out of it.
+    const order = [...ids].sort((a, b) => b.split('.').length - a.split('.').length)
+    if (await app.applyEdits(order.map((id) => ['delete', { id }]))) app.select(null)
   }
 
   function key(e: KeyboardEvent) {

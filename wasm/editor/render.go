@@ -178,6 +178,11 @@ func Render(ctx context.Context, text string, opts RenderOpts) (RenderResult, er
 				si.Parent = o.Parent.AbsID()
 			}
 
+			// The export reports circle as oval and square as rectangle, the UI needs the written shape.
+			if o.Shape.Value != "" {
+				si.Type = o.Shape.Value
+			}
+
 			si.Container = container(o)
 			si.Pinned = o.Top != nil
 			si.Pinnable = pinnable(o)
