@@ -174,6 +174,11 @@ func Render(ctx context.Context, text string, opts RenderOpts) (RenderResult, er
 	}
 
 	for _, c := range d.Connections {
+		// Sequence lifelines are drawn as edges to synthetic objects, they are not editable.
+		if strings.Contains(c.Dst, "-lifeline-end-") {
+			continue
+		}
+
 		ei := EdgeInfo{ID: c.ID, Src: c.Src, Dst: c.Dst, Points: [][2]float64{}}
 		for _, p := range c.Route {
 			ei.Points = append(ei.Points, [2]float64{p.X, p.Y})

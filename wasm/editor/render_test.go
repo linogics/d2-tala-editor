@@ -91,3 +91,14 @@ func TestRenderFastSeeds(t *testing.T) {
 		t.Fatalf("%+v", r)
 	}
 }
+
+func TestRenderSkipsLifelines(t *testing.T) {
+	r, err := Render(t.Context(), "s: {shape: sequence_diagram\na -> b}", RenderOpts{Seeds: []int64{1}})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(r.Edges) != 1 || r.Edges[0].ID != "s.(a -> b)[0]" {
+		t.Fatalf("edges = %+v", r.Edges)
+	}
+}
