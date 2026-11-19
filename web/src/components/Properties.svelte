@@ -31,6 +31,11 @@
 
     return app.applyEdits(ids.map((id) => ['set', { id, attr, value: v }]))
   }
+  // Classes come back as "a;b", one is written as a scalar and several as a D2 array.
+  const assigned = $derived(attrs.class ? attrs.class.split(';') : [])
+  const available = $derived((app.render?.classes ?? []).map((c) => c.name).filter((n) => !assigned.includes(n)))
+  const setClasses = (list: string[]) => setVal('class', list.length > 1 ? `[${list.join('; ')}]` : (list[0] ?? ''))
+
   const set = (attr: string, e: Event) => setVal(attr, (e.currentTarget as HTMLInputElement | HTMLSelectElement).value)
 
   async function rename(e: Event) {
@@ -91,6 +96,22 @@
           </select>
         </label>
       {/if}
+      {#if shape || edge}
+        <div class="classes" role="group" aria-label="Classes">
+          <span class="lbl">Classes</span>
+          {#each assigned as c (c)}
+            <span class="chip">{c}<button aria-label="Remove class {c}" onclick={() => setClasses(assigned.filter((x) => x !== c))}>×</button></span>
+          {/each}
+          {#if available.length}
+            <select aria-label="Add class" value="" onchange={(e) => setClasses([...assigned, e.currentTarget.value])}>
+              <option value="" disabled>Add class</option>
+              {#each available as n (n)}<option value={n}>{n}</option>{/each}
+            </select>
+          {:else if !assigned.length}
+            <span class="none">none defined, see the Classes tab</span>
+          {/if}
+        </div>
+      {/if}
       {#if shape && !many.length}
         <label title={shape.pinnable ? '' : 'Not pinnable here'}>
           <input type="checkbox" checked={shape.pinned} disabled={!shape.pinnable} onchange={pin} /> Pinned
@@ -107,4 +128,10 @@
 <style>
   p { color: var(--muted); margin: 0 0 12px; }
   button { margin-top: 8px; }
+  .classes { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-bottom: 10px; }
+  .lbl { width: 100%; font-size: 12px; font-weight: 500; color: var(--muted); }
+  .chip { display: inline-flex; align-items: center; gap: 2px; padding: 1px 2px 1px 8px; border-radius: 999px; background: var(--secondary-soft); color: var(--secondary); font-size: 12px; }
+  .chip button { margin: 0; padding: 0 5px; border: 0; background: none; color: inherit; line-height: 1.4; }
+  .none { font-size: 12px; color: var(--muted); }
+  .classes select { margin-top: 0; }
 </style>

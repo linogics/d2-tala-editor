@@ -8,10 +8,10 @@ function shape(over = {}) {
   return { id: 'a', parent: '', type: 'rectangle', container: '', x: 1, y: 2, w: 10, h: 10, pinned: false, pinnable: true, ...over }
 }
 
-function props(over = {}, shapes = [shape(over)]) {
+function props(over = {}, shapes = [shape(over)], classes: { name: string; attrs: object }[] = []) {
   const st = {
     selection: shapes.map((s) => ({ kind: 'shape', id: s.id })),
-    render: { shapes, edges: [] },
+    render: { shapes, edges: [], classes },
     applyEdit: vi.fn(async () => ({ id: 'a', text: '' })),
     applyEdits: vi.fn(async () => true),
     select: vi.fn(),
@@ -67,5 +67,16 @@ describe('palette and properties', () => {
       ['set', { id: 'a', attr: 'style.fill', value: '#0000ff' }],
       ['set', { id: 'b', attr: 'style.fill', value: '#0000ff' }],
     ])
+  })
+})
+
+describe('class chips', () => {
+  it('adding a second class writes an array, removing one writes a scalar', () => {
+    const over = { attrs: { class: 'x' } }
+    const { st, target } = props(over, [shape(over)], [{ name: 'x', attrs: {} }, { name: 'y', attrs: {} }])
+    change(target.querySelector('select[aria-label="Add class"]')!, 'y')
+    expect(st.applyEdit).toHaveBeenCalledWith('set', { id: 'a', attr: 'class', value: '[x; y]' })
+    ;(target.querySelector('button[aria-label="Remove class x"]') as HTMLButtonElement).click()
+    expect(st.applyEdit).toHaveBeenCalledWith('set', { id: 'a', attr: 'class', value: null })
   })
 })

@@ -2,10 +2,11 @@
   import type { AppState } from '../lib/state.svelte'
   import Properties from './Properties.svelte'
   import ThemePanel from './ThemePanel.svelte'
+  import ClassesPanel from './ClassesPanel.svelte'
 
   let { state: app }: { state: AppState } = $props()
 
-  const tabs = ['Properties', 'Theme'] as const
+  const tabs = ['Properties', 'Classes', 'Theme'] as const
   let tab = $state<(typeof tabs)[number]>('Properties')
 </script>
 
@@ -17,6 +18,7 @@
   </div>
   <!-- Properties stays mounted for its Delete key handler. -->
   <div class="pane" hidden={tab !== 'Properties'}><Properties state={app} /></div>
+  {#if tab === 'Classes'}<div class="pane"><ClassesPanel state={app} /></div>{/if}
   {#if tab === 'Theme'}<div class="pane"><ThemePanel state={app} /></div>{/if}
 </aside>
 

@@ -101,4 +101,8 @@ func TestSetKeyBareClass(t *testing.T) {
 	if len(cs) != 1 || cs[0].Name != "x" {
 		t.Fatalf("classes %+v:\n%s", cs, out)
 	}
+	out = mustKey(t, out, []string{"classes", "x", "style", "fill"}, ptr("red"))
+	if strings.Count(out, "x") != 1 {
+		t.Fatalf("bare key kept:\n%s", out)
+	}
 }

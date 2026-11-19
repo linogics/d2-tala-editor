@@ -147,8 +147,16 @@ func insertKey(m *d2ast.Map, path []string, value string) error {
 	for i := len(m.Nodes) - 1; i >= 0; i-- {
 		k := m.Nodes[i].MapKey
 		ps := keyPath(k)
-		if ps != nil && len(ps) < len(path) && prefixOf(ps, path) && k.Value.Map != nil {
+		if ps == nil || len(ps) >= len(path) || !prefixOf(ps, path) {
+			continue
+		}
+
+		if k.Value.Map != nil {
 			return insertKey(k.Value.Map, path[len(ps):], value)
+		}
+		// A bare key such as an empty class is replaced by the full key appended below.
+		if k.Value.Unbox() == nil && k.Primary.Unbox() == nil {
+			m.Nodes = slices.Delete(m.Nodes, i, i+1)
 		}
 	}
 
