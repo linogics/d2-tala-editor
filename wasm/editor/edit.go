@@ -114,6 +114,15 @@ func Set(text, id, attr string, value *string) (string, error) {
 		}
 	}
 
+	if attr == "shape" && value != nil {
+		t, err := dropStyles(text, id, *value)
+		if err != nil {
+			return "", err
+		}
+
+		text = t
+	}
+
 	return edit(text, func(g *d2graph.Graph) (*d2graph.Graph, error) {
 		if value == nil && attr == "label" {
 			// Delete misses the inline form ("a: A"), Set with nil clears it.
@@ -130,6 +139,44 @@ func Set(text, id, attr string, value *string) (string, error) {
 		}
 
 		return d2oracle.Set(g, nil, join(id, attr), nil, value)
+	})
+}
+
+// styleShapes lists the only shapes D2 accepts each style on, see d2compiler validateKey.
+var styleShapes = map[string][]string{
+	"3d":            {"rectangle", "square", "hexagon"},
+	"double-border": {"rectangle", "square", "circle", "oval"},
+}
+
+// dropStyles removes the styles of shape id that D2 refuses on shape.
+func dropStyles(text, id, shape string) (string, error) {
+	mk, err := d2parser.ParseMapKey(id)
+	if err != nil {
+		return "", err
+	}
+
+	if len(mk.Edges) > 0 {
+		return text, nil
+	}
+
+	return edit(text, func(g *d2graph.Graph) (*d2graph.Graph, error) {
+		obj, ok := g.Root.HasChild(d2graph.Key(mk.Key))
+		if !ok {
+			return g, nil
+		}
+
+		set := map[string]bool{"3d": obj.Style.ThreeDee != nil, "double-border": obj.Style.DoubleBorder != nil}
+		for style, shapes := range styleShapes {
+			if !set[style] || slices.Contains(shapes, strings.ToLower(shape)) {
+				continue
+			}
+
+			if g, err = d2oracle.Delete(g, nil, join(id, "style."+style)); err != nil {
+				return nil, err
+			}
+		}
+
+		return g, nil
 	})
 }
 

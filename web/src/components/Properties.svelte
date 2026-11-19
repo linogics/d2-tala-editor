@@ -2,7 +2,7 @@
   import type { AppState } from '../lib/state.svelte'
   import { templates } from '../lib/templates'
   import { roots } from '../lib/group'
-  import { arrowheads, edgeFields, nears, shapeFields } from '../lib/fields'
+  import { arrowheads, edgeFields, fieldSteps, nears, shapeFieldsFor } from '../lib/fields'
   import FieldInput from './FieldInput.svelte'
 
   let { state: app }: { state: AppState } = $props()
@@ -18,7 +18,15 @@
       ? Object.fromEntries(Object.entries(many[0].attrs).filter(([k, v]) => many.every((s) => s.attrs[k] === v)))
       : (shape?.attrs ?? edge?.attrs ?? {}),
   )
-  const fields = $derived(many.length ? shapeFields.filter((x) => x.attr !== 'top' && x.attr !== 'left') : shape ? shapeFields : edge ? edgeFields : [])
+  const fields = $derived(
+    many.length
+      ? shapeFieldsFor(many.map((s) => s.type)).filter((x) => x.attr !== 'top' && x.attr !== 'left')
+      : shape
+        ? shapeFieldsFor([shape.type])
+        : edge
+          ? edgeFields
+          : [],
+  )
   const type = $derived(many.length ? (many.every((s) => s.type === many[0].type) ? many[0].type : '') : shape?.type)
   const types = $derived(type && !templates.some((t) => t.key === type) ? [type, ...templates.map((t) => t.key)] : templates.map((t) => t.key))
   const ids = $derived(app.selection.map((x) => x.id))
@@ -27,6 +35,7 @@
 
   const setVal = (attr: string, value: string) => {
     const v = value.trim() || null
+    if (shape && !many.length && (attr === 'top' || attr === 'left')) return app.applyEdits(fieldSteps(shape, attr, v))
     if (ids.length === 1) return app.applyEdit('set', { id: ids[0], attr, value: v })
 
     return app.applyEdits(ids.map((id) => ['set', { id, attr, value: v }]))
