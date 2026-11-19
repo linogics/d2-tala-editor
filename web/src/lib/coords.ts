@@ -22,3 +22,5 @@ export function hitTest(shapes: ShapeInfo[], p: Pt): ShapeInfo | null {
 
   return best
 }
+
+export const snapTo = (n: number, grid: number) => Math.round(n / grid) * grid

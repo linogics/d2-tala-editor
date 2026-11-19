@@ -68,6 +68,22 @@
     <option value="" disabled>Examples</option>
     {#each examples as ex, i (i)}<option value={i}>{ex.name}</option>{/each}
   </select>
+  <button class="magnet" class:on={app.snap} aria-pressed={app.snap} title="Grid and snap" onclick={() => (app.snap = !app.snap)}>
+    <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 3v8a6 6 0 0 0 12 0V3h-4v8a2 2 0 0 1-4 0V3z" fill="currentColor" /><path d="M6 6h4M14 6h4" stroke="#fff" stroke-width="1.5" /></svg>
+  </button>
+  <input
+    class="grid"
+    type="number"
+    min="2"
+    aria-label="Grid size"
+    title="Grid size"
+    value={app.grid}
+    onchange={(e) => {
+      const n = Math.round(Number((e.target as HTMLInputElement).value))
+      if (n >= 2) app.grid = n
+      else (e.target as HTMLInputElement).value = String(app.grid)
+    }}
+  />
   <button onclick={share}>Share</button>
   <button onclick={() => download('diagram.d2', app.code, 'text/plain')}>Export .d2</button>
   <button onclick={exportSvg}>Export .svg</button>
@@ -81,4 +97,7 @@
   .notice { color: #a00; }
   .badge { color: #666; }
   a { margin-left: auto; }
+  .magnet { display: flex; align-items: center; padding: 2px 6px; }
+  .magnet.on { background: #2563eb; color: #fff; border-color: #2563eb; }
+  .grid { width: 4em; }
 </style>

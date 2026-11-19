@@ -22,6 +22,8 @@ export interface ShapeInfo {
   h: number
   pinned: boolean
   pinnable: boolean
+  // D2 attributes set on the shape, keyed by path such as "style.fill".
+  attrs: Record<string, string>
 }
 
 export interface EdgeInfo {
@@ -29,6 +31,7 @@ export interface EdgeInfo {
   src: string
   dst: string
   points: [number, number][]
+  attrs: Record<string, string>
 }
 
 export interface RenderResult {

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createEngine, createWorker } from './lib/engine'
   import { createAppState } from './lib/state.svelte'
-  import { loadInitial, saveCode } from './lib/persist'
+  import { loadGrid, loadInitial, saveCode, saveGrid } from './lib/persist'
   import TopBar from './components/TopBar.svelte'
   import Palette from './components/Palette.svelte'
   import Canvas from './components/Canvas.svelte'
@@ -20,6 +20,9 @@
       return null
     }
   })()
+
+  Object.assign(app, loadGrid(storage))
+  $effect(() => saveGrid(storage, { snap: app.snap, grid: app.grid }))
 
   app.engine.onProgress((l, t) => ((loaded = l), (total = t)))
   app.engine.ready.then(() => (ready = true))

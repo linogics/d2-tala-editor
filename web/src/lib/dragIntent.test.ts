@@ -3,7 +3,7 @@ import { resolveConnect, resolveEdgeDrop, resolveShapeDrop } from './dragIntent'
 import type { EdgeInfo, ShapeInfo } from './protocol'
 
 const sh = (id: string, parent: string, container: string, x: number, y: number, w = 40, h = 40, pinnable = true): ShapeInfo => ({
-  id, parent, type: 'rectangle', container, x, y, w, h, pinned: false, pinnable,
+  id, parent, type: 'rectangle', container, x, y, w, h, pinned: false, pinnable, attrs: {},
 })
 const grid = [
   sh('g', '', 'grid', 0, 0, 200, 100),
@@ -34,7 +34,7 @@ describe('dragIntent', () => {
   })
 
   it('message drag resolves to reorderEdge', () => {
-    const e = (id: string, y: number): EdgeInfo => ({ id, src: 's.a', dst: 's.b', points: [[0, y], [10, y]] })
+    const e = (id: string, y: number): EdgeInfo => ({ id, src: 's.a', dst: 's.b', points: [[0, y], [10, y]], attrs: {} })
     const es = [e('m1', 10), e('m2', 20), e('m3', 30)]
     expect(resolveEdgeDrop(es, es[0], { x: 0, y: 25 })).toEqual({ kind: 'reorderEdge', id: 'm1', before: 'm3' })
     expect(resolveEdgeDrop(es, es[0], { x: 0, y: 99 })).toEqual({ kind: 'reorderEdge', id: 'm1', before: '' })

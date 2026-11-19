@@ -43,13 +43,16 @@ type ShapeInfo struct {
 	H         int    `json:"h"`
 	Pinned    bool   `json:"pinned"`
 	Pinnable  bool   `json:"pinnable"`
+	// Attrs holds the D2 attributes set on the shape, keyed by path such as "style.fill".
+	Attrs map[string]string `json:"attrs"`
 }
 
 type EdgeInfo struct {
-	ID     string       `json:"id"`
-	Src    string       `json:"src"`
-	Dst    string       `json:"dst"`
-	Points [][2]float64 `json:"points"`
+	ID     string            `json:"id"`
+	Src    string            `json:"src"`
+	Dst    string            `json:"dst"`
+	Points [][2]float64      `json:"points"`
+	Attrs  map[string]string `json:"attrs"`
 }
 
 // Diag is a diagnostic. Line is 0-based and Col is a UTF-16 column.
@@ -159,7 +162,7 @@ func Render(ctx context.Context, text string, opts RenderOpts) (RenderResult, er
 	}
 
 	for _, s := range d.Shapes {
-		si := ShapeInfo{ID: s.ID, Type: s.Type, X: s.Pos.X, Y: s.Pos.Y, W: s.Width, H: s.Height}
+		si := ShapeInfo{ID: s.ID, Type: s.Type, X: s.Pos.X, Y: s.Pos.Y, W: s.Width, H: s.Height, Attrs: map[string]string{}}
 		if o := objs[s.ID]; o != nil {
 			if o.Parent != nil {
 				si.Parent = o.Parent.AbsID()
@@ -168,9 +171,15 @@ func Render(ctx context.Context, text string, opts RenderOpts) (RenderResult, er
 			si.Container = container(o)
 			si.Pinned = o.Top != nil
 			si.Pinnable = pinnable(o)
+			si.Attrs = attrs(&o.Attributes)
 		}
 
 		res.Shapes = append(res.Shapes, si)
+	}
+
+	edges := make(map[string]*d2graph.Edge, len(g.Edges))
+	for _, e := range g.Edges {
+		edges[e.AbsID()] = e
 	}
 
 	for _, c := range d.Connections {
@@ -179,7 +188,11 @@ func Render(ctx context.Context, text string, opts RenderOpts) (RenderResult, er
 			continue
 		}
 
-		ei := EdgeInfo{ID: c.ID, Src: c.Src, Dst: c.Dst, Points: [][2]float64{}}
+		ei := EdgeInfo{ID: c.ID, Src: c.Src, Dst: c.Dst, Points: [][2]float64{}, Attrs: map[string]string{}}
+		if e := edges[c.ID]; e != nil {
+			ei.Attrs = edgeAttrs(e)
+		}
+
 		for _, p := range c.Route {
 			ei.Points = append(ei.Points, [2]float64{p.X, p.Y})
 		}

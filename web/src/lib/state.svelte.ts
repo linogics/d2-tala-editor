@@ -15,6 +15,9 @@ export function createAppState(engine: Engine) {
     selection: null as Selection | null,
     notice: null as string | null,
     busy: false,
+    // Magnet: shows the grid and snaps dragged shapes to it.
+    snap: false,
+    grid: 20,
   })
   let sink: (text: string) => void = () => {}
 

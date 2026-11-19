@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { loadInitial, saveCode, shareUrl } from './persist'
+import { loadGrid, loadInitial, saveCode, saveGrid, shareUrl } from './persist'
 
 const loc = (hash: string, href = 'http://x/p/' + hash) => ({ hash, href }) as Location
 const store = (v: string | null) => ({ getItem: () => v }) as unknown as Storage
@@ -39,5 +39,19 @@ describe('persist', () => {
       },
     } as unknown as Storage
     expect(() => saveCode(s, 'a')).not.toThrow()
+  })
+})
+
+describe('grid settings', () => {
+  it('round trips through storage', () => {
+    const m = new Map<string, string>()
+    const s = { getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => m.set(k, v) } as unknown as Storage
+    expect(loadGrid(s)).toEqual({ snap: false, grid: 20 })
+    saveGrid(s, { snap: true, grid: 8 })
+    expect(loadGrid(s)).toEqual({ snap: true, grid: 8 })
+  })
+  it('ignores garbage', () => {
+    expect(loadGrid(store('{"snap":1,"grid":0}'))).toEqual({ snap: false, grid: 20 })
+    expect(loadGrid(store('nope'))).toEqual({ snap: false, grid: 20 })
   })
 })

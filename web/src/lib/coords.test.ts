@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { hitTest, screenToDiagram } from './coords'
+import { hitTest, screenToDiagram, snapTo } from './coords'
 import type { ShapeInfo } from './protocol'
 
 const sh = (id: string, x: number, y: number, w: number, h: number): ShapeInfo => ({
-  id, parent: '', type: 'rectangle', container: "", x, y, w, h, pinned: false, pinnable: true,
+  id, parent: '', type: 'rectangle', container: "", x, y, w, h, pinned: false, pinnable: true, attrs: {},
 })
 
 describe('coords', () => {
@@ -25,5 +25,13 @@ describe('coords', () => {
     } as unknown as SVGSVGElement
 
     expect(screenToDiagram(svg, 30, 50)).toEqual({ x: 10, y: 20 })
+  })
+})
+
+describe('snapTo', () => {
+  it('rounds to the nearest grid line', () => {
+    expect(snapTo(29, 20)).toBe(20)
+    expect(snapTo(31, 20)).toBe(40)
+    expect(snapTo(0, 7)).toBe(0)
   })
 })

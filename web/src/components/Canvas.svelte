@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { AppState } from '../lib/state.svelte'
   import type { EdgeInfo, RenderResult, ShapeInfo } from '../lib/protocol'
-  import { hitTest, screenToDiagram } from '../lib/coords'
+  import { hitTest, screenToDiagram, snapTo } from '../lib/coords'
   import { templates } from '../lib/templates'
   import { resolveConnect, resolveEdgeDrop, resolveShapeDrop, type DragIntent } from '../lib/dragIntent'
 
@@ -64,10 +64,16 @@
     return (app.render?.edges ?? []).filter((e) => par(e.src) === p && par(e.dst) === p)
   }
 
+  // Where the dragged shape's corner lands, on the grid when the magnet is on.
+  function ghostAt(d: Extract<Drag, { kind: 'shape' }>, p: Pt): Pt {
+    const x = d.shape.x + p.x - d.start.x
+    const y = d.shape.y + p.y - d.start.y
+
+    return app.snap ? { x: snapTo(x, app.grid), y: snapTo(y, app.grid) } : { x, y }
+  }
+
   function intentFor(d: Drag, p: Pt): DragIntent {
-    if (d.kind === 'shape') {
-      return resolveShapeDrop(shapes, d.shape, p, { x: d.shape.x + p.x - d.start.x, y: d.shape.y + p.y - d.start.y })
-    }
+    if (d.kind === 'shape') return resolveShapeDrop(shapes, d.shape, p, ghostAt(d, p))
     if (d.kind === 'edge') return resolveEdgeDrop(seqMessages(d.edge) ?? [], d.edge, p)
     if (d.kind === 'connect') return resolveConnect(shapes, d.shape.id, p)
 
@@ -110,7 +116,7 @@
     live = intentFor(drag, p)
     if (drag.kind === 'shape') {
       const { shape } = drag
-      ghost = { id: shape.id, x: shape.x + p.x - start.x, y: shape.y + p.y - start.y, w: shape.w, h: shape.h }
+      ghost = { id: shape.id, ...ghostAt(drag, p), w: shape.w, h: shape.h }
     }
   }
 
@@ -188,10 +194,37 @@
     return { x1: x, y1: ref.y, x2: x, y2: ref.y + ref.h }
   }
 
+  const steps: Record<string, [number, number]> = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }
+  let nudgeTimer: ReturnType<typeof setTimeout> | undefined
+
+  // Arrow keys move the ghost right away and pin once the keys pause, so a burst is one layout and one undo step.
+  function key(e: KeyboardEvent) {
+    const st = steps[e.key]
+    const t = e.target as HTMLElement
+    if (!st || drag || !selShape?.pinnable || e.ctrlKey || e.metaKey || e.altKey) return
+    if (t.closest?.('input, textarea, select, .cm-editor') || t.isContentEditable) return
+    e.preventDefault()
+    const s = selShape
+    const n = e.shiftKey ? app.grid : 1
+    const base = ghost?.id === s.id ? ghost : s
+    ghost = { id: s.id, x: Math.max(0, base.x + st[0] * n), y: Math.max(0, base.y + st[1] * n), w: s.w, h: s.h }
+    clearTimeout(nudgeTimer)
+    nudgeTimer = setTimeout(async () => {
+      const g = ghost
+      if (!g) return
+      if (await app.applyEdit('pin', { id: g.id, x: Math.round(g.x), y: Math.round(g.y) })) dropRender = app.render
+      else ghost = null
+    }, 300)
+  }
+
+  $effect(() => () => clearTimeout(nudgeTimer))
+
   const isSel = (kind: string, id: string) => app.selection?.kind === kind && app.selection.id === id
 </script>
 
-<div class="box" bind:this={box} role="presentation" ondragover={(e) => e.preventDefault()} ondrop={dropTemplate}>
+<svelte:window onkeydown={key} />
+
+<div class="box" class:grid={app.snap} style:--g="{app.grid * view.k}px" style:--gx="{view.x - (vb?.[0] ?? 0) * view.k}px" style:--gy="{view.y - (vb?.[1] ?? 0) * view.k}px" bind:this={box} role="presentation" ondragover={(e) => e.preventDefault()} ondrop={dropTemplate}>
   <div class="stage" style:width="{size.w}px" style:height="{size.h}px" style:transform="translate({view.x}px, {view.y}px) scale({view.k})">
     <!-- eslint-disable-next-line svelte/no-at-html-tags -->
     {@html app.render?.svg ?? ''}
@@ -206,6 +239,14 @@
         onpointerup={up}
         onpointercancel={up}
       >
+        {#if app.snap}
+          <defs>
+            <pattern id="grid" width={app.grid} height={app.grid} patternUnits="userSpaceOnUse">
+              <path d="M{app.grid} 0H0V{app.grid}" fill="none" stroke="#8886" stroke-width={1 / view.k} shape-rendering="crispEdges" />
+            </pattern>
+          </defs>
+          <rect class="gridfill" x={vb[0]} y={vb[1]} width={vb[2]} height={vb[3]} />
+        {/if}
         {#each app.render?.shapes ?? [] as s (s.id)}
           <rect
             data-shape={s.id}
@@ -248,6 +289,12 @@
 
 <style>
   .box { position: relative; height: 100%; overflow: hidden; border-right: 1px solid #ccc; touch-action: none; user-select: none; }
+  .grid {
+    background-image: linear-gradient(to right, #8886 1px, transparent 1px), linear-gradient(to bottom, #8886 1px, transparent 1px);
+    background-size: var(--g) var(--g);
+    background-position: var(--gx) var(--gy);
+  }
+  .gridfill { fill: url(#grid); pointer-events: none; }
   .stage { position: absolute; transform-origin: 0 0; }
   .stage :global(> svg:not(.overlay)) { width: 100%; height: 100%; display: block; }
   .overlay { position: absolute; inset: 0; width: 100%; height: 100%; }

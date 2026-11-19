@@ -102,3 +102,21 @@ func TestRenderSkipsLifelines(t *testing.T) {
 		t.Fatalf("edges = %+v", r.Edges)
 	}
 }
+
+func TestRenderAttrs(t *testing.T) {
+	r := mustRender(t, "a: {style.fill: red; top: 10; left: 20; near: top-center}\nb\na -> b: {style.animated: true; target-arrowhead.shape: diamond}", RenderOpts{})
+
+	a := byID(r, "a").Attrs
+	if a["style.fill"] != "red" || a["top"] != "10" || a["left"] != "20" || a["label"] != "a" {
+		t.Fatalf("a attrs %v errors %v", a, r.Errors)
+	}
+
+	if b := byID(r, "b").Attrs; len(b) != 1 {
+		t.Fatalf("b attrs %v, want only label", b)
+	}
+
+	e := r.Edges[0].Attrs
+	if e["style.animated"] != "true" || e["target-arrowhead.shape"] != "diamond" {
+		t.Fatalf("edge attrs %v", e)
+	}
+}
