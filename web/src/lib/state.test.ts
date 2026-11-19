@@ -55,6 +55,40 @@ describe('app state', () => {
     st.dispose()
   })
 
+  it('applyEdits threads text through steps and pushes once', async () => {
+    const eng = fake((op, a) => ({ text: a.text + op[0] }))
+    const st = createAppState(eng)
+    const sink = vi.fn()
+    st.registerCodeSink(sink)
+    st.code = 'x'
+    expect(await st.applyEdits([['pin', { id: 'a', x: 0, y: 0 }], ['delete', { id: 'b' }]])).toBe(true)
+    expect(eng.call).toHaveBeenNthCalledWith(2, 'delete', { id: 'b', text: 'xp' })
+    expect(sink).toHaveBeenCalledTimes(1)
+    expect(sink).toHaveBeenCalledWith('xpd')
+    st.dispose()
+  })
+
+  it('applyEdits pushes nothing when a step fails', async () => {
+    let n = 0
+    const st = createAppState(fake(() => (n++ ? Promise.reject(new EngineError('not_found', 'gone')) : { text: 'y' })))
+    const sink = vi.fn()
+    st.registerCodeSink(sink)
+    expect(await st.applyEdits([['delete', { id: 'a' }], ['delete', { id: 'b' }]])).toBe(false)
+    expect(sink).not.toHaveBeenCalled()
+    expect(st.notice).toBe('gone')
+    st.dispose()
+  })
+
+  it('toggle adds and removes shapes and drops an edge', () => {
+    const st = createAppState(fake(() => good))
+    st.select({ kind: 'edge', id: 'e' })
+    st.toggle('a')
+    st.toggle('b')
+    st.toggle('a')
+    expect(st.selection).toEqual([{ kind: 'shape', id: 'b' }])
+    st.dispose()
+  })
+
   it('undo restores text before a canvas edit', async () => {
     const st = createAppState(fake((op) => (op === 'render' ? good : { text: 'a\nb\n' })))
     st.code = 'a\n'

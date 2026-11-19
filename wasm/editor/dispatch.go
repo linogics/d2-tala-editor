@@ -153,20 +153,7 @@ var handlers = map[string]handler{
 		return list(Completions(a.Text, a.Line, a.Col))
 	}),
 	"refRanges": op(func(a idArgs) (any, error) { return list(RefRanges(a.Text, a.ID)) }),
-	"encode": op(func(a textArgs) (any, error) {
-		v, err := Encode(a.Text)
-		if err != nil {
-			return nil, err
-		}
-
-		return struct {
-			Value string `json:"value"`
-		}{v}, nil
-	}),
-	"decode": op(func(a struct{ Value string }) (any, error) {
-		return textRes(Decode(a.Value))
-	}),
-	"themes": op(func(struct{}) (any, error) { return list(Themes(), nil) }),
+	"themes":    op(func(struct{}) (any, error) { return list(Themes(), nil) }),
 }
 
 // Dispatch runs one op with JSON args and returns a JSON envelope.

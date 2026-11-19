@@ -7,12 +7,16 @@ export interface Selection {
   id: string
 }
 
+// One canvas edit of a group action, the text is filled in by applyEdits.
+export type Step = { [O in Op]: [O, Omit<ArgsOf<O>, 'text'>] }[Op]
+
 export function createAppState(engine: Engine) {
   const s = $state({
     code: '',
     render: null as RenderResult | null,
     errors: [] as Diag[],
-    selection: null as Selection | null,
+    // Several shapes, or a single edge. Empty means nothing is selected.
+    selection: [] as Selection[],
     notice: null as string | null,
     busy: false,
     // Magnet: shows the grid and snaps dragged shapes to it.
@@ -53,6 +57,26 @@ export function createAppState(engine: Engine) {
         return null
       }
     },
+    // Runs the steps on the text one after another and pushes the result once, so the group is one undo step.
+    async applyEdits(steps: Step[]): Promise<boolean> {
+      let text = s.code
+      try {
+        for (const [op, args] of steps) {
+          const r = await engine.call(op, { ...args, text } as ArgsOf<typeof op>)
+          const t = (r as { text?: unknown }).text
+          if (typeof t === 'string') text = t
+        }
+      } catch (e) {
+        if (!(e instanceof EngineError)) throw e
+        s.notice = e.code === 'broken_text' ? 'Fix the code error first' : e.message
+
+        return false
+      }
+      s.notice = null
+      if (text !== s.code) sink(text)
+
+      return true
+    },
     // Replaces the document through the editor, so undo restores the old code.
     replaceCode(text: string) {
       sink(text)
@@ -61,7 +85,15 @@ export function createAppState(engine: Engine) {
       sink = fn
     },
     select(sel: Selection | null) {
-      s.selection = sel
+      s.selection = sel ? [sel] : []
+    },
+    selectShapes(ids: string[]) {
+      s.selection = ids.map((id) => ({ kind: 'shape' as const, id }))
+    },
+    // Adds or removes a shape. An edge in the selection is dropped, since groups hold shapes only.
+    toggle(id: string) {
+      const shapes = s.selection.filter((x) => x.kind === 'shape')
+      s.selection = shapes.some((x) => x.id === id) ? shapes.filter((x) => x.id !== id) : [...shapes, { kind: 'shape', id }]
     },
     dispose: () => loop.dispose(),
   })

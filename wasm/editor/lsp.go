@@ -6,7 +6,6 @@ import (
 
 	"github.com/d2lang/d2/d2lsp"
 	"github.com/d2lang/d2/d2themes/d2themescatalog"
-	"github.com/d2lang/d2/lib/urlenc"
 )
 
 // CompletionItem is d2lsp's completion item.
@@ -52,10 +51,6 @@ func RefRanges(text, id string) ([]Range, error) {
 
 	return out, nil
 }
-
-func Encode(text string) (string, error) { return urlenc.Encode(text) }
-
-func Decode(s string) (string, error) { return urlenc.Decode(s) }
 
 func Themes() []ThemeInfo {
 	var out []ThemeInfo

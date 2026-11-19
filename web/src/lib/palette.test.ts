@@ -8,11 +8,12 @@ function shape(over = {}) {
   return { id: 'a', parent: '', type: 'rectangle', container: '', x: 1, y: 2, w: 10, h: 10, pinned: false, pinnable: true, ...over }
 }
 
-function props(over = {}) {
+function props(over = {}, shapes = [shape(over)]) {
   const st = {
-    selection: { kind: 'shape', id: 'a' },
-    render: { shapes: [shape(over)], edges: [] },
+    selection: shapes.map((s) => ({ kind: 'shape', id: s.id })),
+    render: { shapes, edges: [] },
     applyEdit: vi.fn(async () => ({ id: 'a', text: '' })),
+    applyEdits: vi.fn(async () => true),
     select: vi.fn(),
   }
   const target = document.createElement('div')
@@ -52,5 +53,19 @@ describe('palette and properties', () => {
   it('pin toggle disabled for grid child', () => {
     const { target } = props({ pinnable: false })
     expect((target.querySelector('input[type=checkbox]') as HTMLInputElement).disabled).toBe(true)
+  })
+
+  it('group edit sets the attr on every shape and marks mixed values', () => {
+    const a = shape({ attrs: { 'style.fill': '#ff0000', 'style.opacity': '0.5' } })
+    const b = shape({ id: 'b', attrs: { 'style.fill': '#00ff00', 'style.opacity': '0.5' } })
+    const { st, target } = props({}, [a, b])
+    expect(target.textContent).toContain('2 shapes selected')
+    expect(target.querySelector('input[placeholder=mixed]')).not.toBeNull()
+    expect(target.textContent).not.toContain('Top')
+    change(target.querySelector('input[type=color]')!, '#0000ff')
+    expect(st.applyEdits).toHaveBeenCalledWith([
+      ['set', { id: 'a', attr: 'style.fill', value: '#0000ff' }],
+      ['set', { id: 'b', attr: 'style.fill', value: '#0000ff' }],
+    ])
   })
 })

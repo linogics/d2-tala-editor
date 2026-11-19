@@ -29,15 +29,9 @@
 
   const init = fetch('./examples.json')
     .then((r) => r.json())
-    .then(async (ex: { name: string; code: string }[]) => {
+    .then((ex: { name: string; code: string }[]) => {
       examples = ex
-      const text = await loadInitial(
-        location,
-        storage,
-        async (value) => (await app.engine.call('decode', { value })).text,
-        ex[0].code,
-      )
-      app.setCodeFromEditor(text)
+      app.setCodeFromEditor(loadInitial(storage, ex[0].code))
     })
 
   $effect(() => {
@@ -52,8 +46,9 @@
 
 {#if !ready}
   <div class="overlay">
-    <div>Loading engine {mb(loaded)} / {mb(total)} MB</div>
-    <progress value={loaded} max={total || 1}></progress>
+    <strong class="brand">d2-tala-editor</strong>
+    <div class="track"><div class="fill" style:width="{total ? (100 * loaded) / total : 0}%"></div></div>
+    <div class="sub">Loading engine {mb(loaded)} / {mb(total)} MB</div>
   </div>
 {/if}
 
@@ -70,8 +65,11 @@
 {/await}
 
 <style>
-  :global(body) { margin: 0; }
   .app { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
-  .cols { display: grid; grid-template-columns: 140px 1fr 220px 34%; min-height: 0; }
-  .overlay { position: fixed; inset: 0; z-index: 10; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+  .cols { display: grid; grid-template-columns: 168px 1fr 248px 34%; min-height: 0; }
+  .overlay { position: fixed; inset: 0; z-index: 10; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
+  .brand { font-size: 22px; font-weight: 700; color: var(--primary); }
+  .track { width: 260px; height: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
+  .fill { height: 100%; background: var(--primary); transition: width 0.2s; }
+  .sub { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 </style>

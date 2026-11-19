@@ -76,8 +76,6 @@ export interface Ops {
   format: { args: T; result: T }
   completions: { args: T & { line: number; col: number }; result: CompletionItem[] }
   refRanges: { args: Id; result: Range[] }
-  encode: { args: T; result: { value: string } }
-  decode: { args: { value: string }; result: T }
   themes: { args: Record<string, never>; result: ThemeInfo[] }
 }
 

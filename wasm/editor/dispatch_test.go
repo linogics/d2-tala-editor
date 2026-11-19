@@ -95,8 +95,6 @@ func TestDispatchEveryOp(t *testing.T) {
 		"format":      `{"text":"a:   {b}"}`,
 		"completions": `{"text":"a: {","line":0,"col":4}`,
 		"refRanges":   `{"text":"a -> b","id":"a"}`,
-		"encode":      `{"text":"a -> b"}`,
-		"decode":      `{"value":"` + encodedAB(t) + `"}`,
 		"themes":      `{}`,
 	}
 
@@ -107,15 +105,4 @@ func TestDispatchEveryOp(t *testing.T) {
 			}
 		})
 	}
-}
-
-func encodedAB(t *testing.T) string {
-	t.Helper()
-
-	s, err := Encode("a -> b")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return s
 }

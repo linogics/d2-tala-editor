@@ -1,0 +1,154 @@
+/* Design tokens. Light is the default, dark comes from the OS or the top bar toggle. */
+:root {
+  color-scheme: light;
+  --bg: #f5f7fb;
+  --surface: #ffffff;
+  --surface-2: #f0f3f8;
+  --border: #e2e6ee;
+  --border-strong: #cdd3de;
+  --text: #1a1f2b;
+  --muted: #6b7385;
+  --primary: #0095bb;
+  --primary-hover: #007fa0;
+  --primary-fg: #ffffff;
+  --primary-soft: #00acd71f;
+  --secondary: #8e2db5;
+  --secondary-soft: #8e2db51f;
+  --canvas: #eef1f6;
+  --canvas-dot: #c6cdda;
+  --grid-line: #8a93a64d;
+  --danger: #b42318;
+  --danger-bg: #fde8e7;
+  --warn-bg: #fff4d6;
+  --warn-fg: #7a4b00;
+  --selection: #00acd733;
+  --syn-keyword: #8e2db5;
+  --syn-string: #0b7a52;
+  --syn-comment: #8a93a6;
+  --syn-operator: #0087a8;
+  --shadow: 0 1px 2px #1a1f2b14, 0 4px 12px #1a1f2b0d;
+  --radius: 8px;
+  --font: 'JetBrains Mono', ui-monospace, monospace;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-mode='light']) {
+    color-scheme: dark;
+    --bg: #0d1016;
+    --surface: #141821;
+    --surface-2: #1b202b;
+    --border: #252b38;
+    --border-strong: #343b4b;
+    --text: #e5e8ef;
+    --muted: #8a92a5;
+    --primary: #2cc3e8;
+    --primary-hover: #5fd3ef;
+    --primary-fg: #04222c;
+    --primary-soft: #2cc3e826;
+    --secondary: #b46ae0;
+    --secondary-soft: #b46ae02e;
+    --canvas: #0a0d12;
+    --canvas-dot: #232937;
+    --grid-line: #8a93a640;
+    --danger: #ff9b93;
+    --danger-bg: #3a1418;
+    --warn-bg: #3a2c0c;
+    --warn-fg: #f6d58a;
+    --selection: #2cc3e840;
+    --syn-keyword: #c792ea;
+    --syn-string: #7fd6a4;
+    --syn-comment: #6b7385;
+    --syn-operator: #2cc3e8;
+    --shadow: 0 1px 2px #0006, 0 4px 12px #0004;
+  }
+}
+
+/* Same values as the media block, for the explicit toggle. */
+:root[data-mode='dark'] {
+  color-scheme: dark;
+  --bg: #0d1016;
+  --surface: #141821;
+  --surface-2: #1b202b;
+  --border: #252b38;
+  --border-strong: #343b4b;
+  --text: #e5e8ef;
+  --muted: #8a92a5;
+  --primary: #2cc3e8;
+  --primary-hover: #5fd3ef;
+  --primary-fg: #04222c;
+  --primary-soft: #2cc3e826;
+  --secondary: #b46ae0;
+  --secondary-soft: #b46ae02e;
+  --canvas: #0a0d12;
+  --canvas-dot: #232937;
+  --grid-line: #8a93a640;
+  --danger: #ff9b93;
+  --danger-bg: #3a1418;
+  --warn-bg: #3a2c0c;
+  --warn-fg: #f6d58a;
+  --selection: #2cc3e840;
+  --syn-keyword: #c792ea;
+  --syn-string: #7fd6a4;
+  --syn-comment: #6b7385;
+  --syn-operator: #2cc3e8;
+  --shadow: 0 1px 2px #0006, 0 4px 12px #0004;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.4 var(--font);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+button,
+select,
+input:not([type='checkbox']):not([type='color']) {
+  font: inherit;
+  color: var(--text);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 5px 9px;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+}
+button { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+button:hover, select:hover, input:not([type='checkbox']):not([type='color']):hover { border-color: var(--border-strong); }
+button:active { transform: translateY(1px); }
+button.primary { background: var(--primary); border-color: var(--primary); color: var(--primary-fg); font-weight: 600; }
+button.primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); }
+button.danger { color: var(--danger); }
+button.danger:hover { background: var(--danger-bg); border-color: var(--danger); }
+button.icon { padding: 5px; }
+button.on { background: var(--primary-soft); border-color: var(--primary); color: var(--primary); }
+input::placeholder { color: var(--muted); }
+input[type='checkbox'] { accent-color: var(--primary); }
+input[type='color'] { border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface-2); height: 30px; cursor: pointer; }
+
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 1px; }
+button:focus-visible, select:focus-visible, input:focus-visible { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+
+/* Panel title shared by the side panes. */
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 34px;
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  flex: none;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
+::-webkit-scrollbar-track { background: transparent; }

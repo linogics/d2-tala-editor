@@ -9,6 +9,8 @@
   import type { AppState } from '../lib/state.svelte'
   import type { Range } from '../lib/protocol'
   import { d2Language } from '../lib/d2lang'
+  import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
+  import { tags } from '@lezer/highlight'
 
   let { state }: { state: AppState } = $props()
   let host: HTMLDivElement
@@ -25,6 +27,35 @@
     },
     provide: (f) => EditorView.decorations.from(f),
   })
+
+  // Colors come from the CSS tokens, so the editor follows light and dark mode without a reconfigure.
+  const theme = EditorView.theme({
+    '&': { height: '100%', backgroundColor: 'var(--surface)', color: 'var(--text)' },
+    '.cm-scroller': { fontFamily: 'var(--mono)', fontSize: '12.5px', lineHeight: '1.6' },
+    '.cm-content': { caretColor: 'var(--primary)' },
+    '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--primary)', borderLeftWidth: '2px' },
+    '&.cm-focused': { outline: 'none' },
+    '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground, .cm-selectionBackground, ::selection': {
+      backgroundColor: 'var(--selection) !important',
+    },
+    '.cm-gutters': { backgroundColor: 'var(--surface)', color: 'var(--muted)', border: 'none' },
+    '.cm-activeLine': { backgroundColor: 'var(--primary-soft)' },
+    '.cm-activeLineGutter': { backgroundColor: 'transparent', color: 'var(--text)' },
+    '.cm-matchingBracket, &.cm-focused .cm-matchingBracket': { backgroundColor: 'var(--secondary-soft)', outline: 'none' },
+    '.cm-foldPlaceholder': { backgroundColor: 'var(--surface-2)', border: '1px solid var(--border)', color: 'var(--muted)' },
+    '.cm-tooltip': { backgroundColor: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '8px', boxShadow: 'var(--shadow)', overflow: 'hidden' },
+    '.cm-tooltip-autocomplete > ul > li[aria-selected]': { backgroundColor: 'var(--primary)', color: 'var(--primary-fg)' },
+    '.cm-panels': { backgroundColor: 'var(--surface-2)', color: 'var(--text)' },
+    '.cm-searchMatch': { backgroundColor: 'var(--secondary-soft)' },
+    '.cm-ref': { backgroundColor: 'var(--secondary-soft)', borderRadius: '3px' },
+  })
+  const highlight = HighlightStyle.define([
+    { tag: tags.keyword, color: 'var(--syn-keyword)', fontWeight: '600' },
+    { tag: tags.string, color: 'var(--syn-string)' },
+    { tag: tags.comment, color: 'var(--syn-comment)', fontStyle: 'italic' },
+    { tag: tags.operator, color: 'var(--syn-operator)', fontWeight: '600' },
+    { tag: tags.punctuation, color: 'var(--muted)' },
+  ])
 
   const pos = (doc: EditorState['doc'], line: number, col: number) => {
     const l = doc.line(Math.min(Math.max(line, 0), doc.lines - 1) + 1)
@@ -77,7 +108,8 @@
           d2Language,
           refField,
           autocompletion({ override: [complete] }),
-          EditorView.theme({ '&': { height: '100%' }, '.cm-ref': { backgroundColor: 'rgba(80,140,255,.25)' } }),
+          theme,
+          syntaxHighlighting(highlight),
           EditorView.updateListener.of((u) => {
             if (u.docChanged) state.setCodeFromEditor(u.state.doc.toString())
             else if (u.selectionSet && u.transactions.some((t) => t.isUserEvent('select.pointer')))
@@ -110,9 +142,9 @@
   $effect(() => {
     const sel = state.selection
     const text = state.code
-    if (!sel) return void view.dispatch({ effects: setRefs.of(Decoration.none) })
-    state.engine
-      .call('refRanges', { id: sel.id, text })
+    if (!sel.length) return void view.dispatch({ effects: setRefs.of(Decoration.none) })
+    Promise.all(sel.map((x) => state.engine.call('refRanges', { id: x.id, text })))
+      .then((all) => all.flat())
       .then((ranges) => {
         const doc = view.state.doc
         const marks = ranges
@@ -126,11 +158,12 @@
   })
 </script>
 
-<div class="pane" bind:this={host}></div>
+<section class="pane">
+  <div class="panel-head">Code</div>
+  <div class="host" bind:this={host}></div>
+</section>
 
 <style>
-  .pane {
-    height: 100%;
-    overflow: hidden;
-  }
+  .pane { display: flex; flex-direction: column; min-height: 0; background: var(--surface); }
+  .host { flex: 1; min-height: 0; overflow: hidden; }
 </style>

@@ -37,18 +37,6 @@ func TestRefRangesUTF16(t *testing.T) {
 	}
 }
 
-func TestEncodeDecodeRoundTrip(t *testing.T) {
-	enc, err := Encode("a -> é")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	dec, err := Decode(enc)
-	if err != nil || dec != "a -> é" {
-		t.Fatalf("%q %v", dec, err)
-	}
-}
-
 func TestThemesHasDefault(t *testing.T) {
 	var zero, dark bool
 
