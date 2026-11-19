@@ -1,2 +1,4 @@
 .superpowers/
 .codegraph/
+web/public/editor.wasm
+web/public/wasm_exec.js

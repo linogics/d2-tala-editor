@@ -22,3 +22,7 @@ Native (non-WASM) reference from the controller: free 50 [1] = 4971 ms, pinned 5
 Fast mode default: ON. 50 nodes with `[1,2,3]` took 67428 ms, far more than 1000 ms.
 
 Free layout is slow (seconds at 30 to 50 nodes, even with a single seed), but fully pinned diagrams are fast. The editor therefore relies on pinning (pin on drop, pin all), and Task 6 should keep rendering off the UI thread.
+
+## WASM build size
+
+Raw 36667557 bytes (35.0 MB), gzip -9 9980831 bytes (9.5 MB). Under the 15 MB gzip budget.
