@@ -80,6 +80,7 @@ func pinnable(obj *d2graph.Object) bool {
 	if p == nil {
 		return true
 	}
+
 	return !isHierarchy(p) && obj.OuterSequenceDiagram() == nil && p.GridColumns == nil && p.GridRows == nil
 }
 
@@ -92,6 +93,7 @@ func container(obj *d2graph.Object) string {
 	case isHierarchy(obj):
 		return "hierarchy"
 	}
+
 	return ""
 }
 
@@ -99,15 +101,19 @@ func container(obj *d2graph.Object) string {
 // go in the result. The returned error is only for internal failures.
 func Render(ctx context.Context, text string, opts RenderOpts) (RenderResult, error) {
 	res := RenderResult{Shapes: []ShapeInfo{}, Edges: []EdgeInfo{}, Errors: []Diag{}}
+
 	r, err := sharedRuler()
 	if err != nil {
 		return res, err
 	}
+
 	ctx = log.WithDefault(ctx) // D2 layout code requires a logger in ctx
+
 	var talaOpts *d2talalayout.Options
 	if opts.Seeds != nil {
 		talaOpts = &d2talalayout.Options{Seeds: opts.Seeds}
 	}
+
 	d, g, err := d2lib.Compile(ctx, text, &d2lib.CompileOptions{
 		UTF16Pos: true,
 		Ruler:    r,
@@ -116,6 +122,7 @@ func Render(ctx context.Context, text string, opts RenderOpts) (RenderResult, er
 			if engine != "tala" {
 				return nil, fmt.Errorf("unsupported layout engine %q", engine)
 			}
+
 			return func(ctx context.Context, g *d2graph.Graph) error {
 				return d2talalayout.Layout(ctx, g, talaOpts)
 			}, nil
@@ -131,6 +138,7 @@ func Render(ctx context.Context, text string, opts RenderOpts) (RenderResult, er
 		} else {
 			res.Errors = append(res.Errors, Diag{Message: err.Error()})
 		}
+
 		return res, nil
 	}
 
@@ -142,30 +150,37 @@ func Render(ctx context.Context, text string, opts RenderOpts) (RenderResult, er
 	if err != nil {
 		return res, err
 	}
+
 	res.SVG = string(svg)
 
 	objs := make(map[string]*d2graph.Object, len(g.Objects))
 	for _, o := range g.Objects {
 		objs[o.AbsID()] = o
 	}
+
 	for _, s := range d.Shapes {
 		si := ShapeInfo{ID: s.ID, Type: s.Type, X: s.Pos.X, Y: s.Pos.Y, W: s.Width, H: s.Height}
 		if o := objs[s.ID]; o != nil {
 			if o.Parent != nil {
 				si.Parent = o.Parent.AbsID()
 			}
+
 			si.Container = container(o)
 			si.Pinned = o.Top != nil
 			si.Pinnable = pinnable(o)
 		}
+
 		res.Shapes = append(res.Shapes, si)
 	}
+
 	for _, c := range d.Connections {
 		ei := EdgeInfo{ID: c.ID, Src: c.Src, Dst: c.Dst, Points: [][2]float64{}}
 		for _, p := range c.Route {
 			ei.Points = append(ei.Points, [2]float64{p.X, p.Y})
 		}
+
 		res.Edges = append(res.Edges, ei)
 	}
+
 	return res, nil
 }

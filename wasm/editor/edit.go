@@ -31,6 +31,7 @@ func BrokenDiag(err error) (Diag, bool) {
 	if errors.As(err, &be) {
 		return be.diag, true
 	}
+
 	return Diag{}, false
 }
 
@@ -38,13 +39,16 @@ func compile(text string) (*d2graph.Graph, error) {
 	g, _, err := d2compiler.Compile("", strings.NewReader(text), &d2compiler.CompileOptions{UTF16Pos: true})
 	if err != nil {
 		d := Diag{Message: err.Error()}
+
 		var pe *d2parser.ParseError
 		if errors.As(err, &pe) && len(pe.Errors) > 0 {
 			e := pe.Errors[0]
 			d = Diag{e.Range.Start.Line, e.Range.Start.Column, e.Message}
 		}
+
 		return nil, &brokenError{d}
 	}
+
 	return g, nil
 }
 
@@ -54,9 +58,11 @@ func edit(text string, fn func(g *d2graph.Graph) (*d2graph.Graph, error)) (strin
 	if err != nil {
 		return "", err
 	}
+
 	if g, err = fn(g); err != nil {
 		return "", err
 	}
+
 	return d2format.Format(g.AST), nil
 }
 
@@ -64,6 +70,7 @@ func join(parent, key string) string {
 	if parent == "" {
 		return key
 	}
+
 	return parent + "." + key
 }
 
@@ -72,15 +79,20 @@ func Create(text, parent, shape string) (string, string, error) {
 	if base == "" {
 		base = "rectangle"
 	}
+
 	var id string
+
 	out, err := edit(text, func(g *d2graph.Graph) (*d2graph.Graph, error) {
 		var err error
+
 		g, id, err = d2oracle.Create(g, nil, join(parent, base))
 		if err != nil || shape == "" {
 			return g, err
 		}
+
 		return d2oracle.Set(g, nil, id+".shape", nil, &shape)
 	})
+
 	return out, id, err
 }
 
@@ -90,6 +102,7 @@ func Set(text, id, attr string, value *string) (string, error) {
 		if value == nil {
 			return d2oracle.Delete(g, nil, join(id, attr))
 		}
+
 		return d2oracle.Set(g, nil, join(id, attr), nil, value)
 	})
 }
@@ -105,30 +118,40 @@ func Move(text, id, newParent string) (string, string, error) {
 	if err != nil || len(nk.Path) == 0 {
 		return "", "", fmt.Errorf("bad id %q", id)
 	}
+
 	newID := join(newParent, nk.Path[len(nk.Path)-1].Unbox().ScalarString())
 	out, err := edit(text, func(g *d2graph.Graph) (*d2graph.Graph, error) {
 		return d2oracle.Move(g, nil, id, newID, true)
 	})
+
 	return out, newID, err
 }
 
 func Rename(text, id, name string) (string, string, error) {
 	var nid string
+
 	out, err := edit(text, func(g *d2graph.Graph) (*d2graph.Graph, error) {
 		var err error
+
 		g, nid, err = d2oracle.Rename(g, nil, id, name)
+
 		return g, err
 	})
+
 	return out, nid, err
 }
 
 func Connect(text, src, dst string) (string, string, error) {
 	var eid string
+
 	out, err := edit(text, func(g *d2graph.Graph) (*d2graph.Graph, error) {
 		var err error
+
 		g, eid, err = d2oracle.Create(g, nil, src+" -> "+dst)
+
 		return g, err
 	})
+
 	return out, eid, err
 }
 

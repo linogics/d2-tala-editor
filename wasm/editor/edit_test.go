@@ -9,9 +9,11 @@ import (
 func must(t *testing.T) func(string, error) string {
 	return func(s string, err error) string {
 		t.Helper()
+
 		if err != nil {
 			t.Fatal(err)
 		}
+
 		return s
 	}
 }
@@ -21,6 +23,7 @@ func TestCreateRoot(t *testing.T) {
 	if err != nil || id != "cylinder" || !strings.Contains(out, "shape: cylinder") {
 		t.Fatalf("%q %q %v", out, id, err)
 	}
+
 	if _, err := compile(out); err != nil {
 		t.Fatal(err)
 	}
@@ -37,10 +40,12 @@ func TestSetAndDeleteAttr(t *testing.T) {
 	in := "a -> b"
 	want, _ := Format(in)
 	v := "#ff0000"
+
 	out, err := Set(in, "a", "style.fill", &v)
 	if err != nil || !strings.Contains(out, "#ff0000") {
 		t.Fatalf("%q %v", out, err)
 	}
+
 	out, err = Set(out, "a", "style.fill", nil)
 	if err != nil || out != want {
 		t.Fatalf("%q vs %q %v", out, want, err)
@@ -52,30 +57,37 @@ func TestQuotedIDs(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	text, pid, err := Rename(text, id, "my node")
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	text, cid, err := Create(text, pid, "")
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	text, xid, err := Rename(text, cid, "a.b")
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	text, _, err = Create(text+"\nCafé", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	text, _, err = Connect(text, "Café", xid)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	r := mustRender(t, text, RenderOpts{Seeds: []int64{1}})
 	if len(r.Errors) != 0 {
 		t.Fatalf("%v\n%s", r.Errors, text)
 	}
+
 	if byID(r, pid).W == 0 || byID(r, xid).W == 0 {
 		t.Fatalf("ids %q %q not in shapes %v\n%s", pid, xid, r.Shapes, text)
 	}
@@ -86,6 +98,7 @@ func TestMoveReparent(t *testing.T) {
 	if err != nil || id != "b.x" {
 		t.Fatalf("%q %q %v", out, id, err)
 	}
+
 	g, _ := compile(out)
 	if lookup(g, "b.x") == nil || lookup(g, "a.x") != nil {
 		t.Fatal(out)
@@ -104,7 +117,9 @@ func TestConnectAndReconnect(t *testing.T) {
 	if err != nil || !strings.Contains(out, "a -> b") {
 		t.Fatalf("%q %v", out, err)
 	}
+
 	dst := "c"
+
 	out, err = Reconnect(out, eid, nil, &dst)
 	if err != nil || !strings.Contains(out, "a -> c") {
 		t.Fatalf("%q %v", out, err)
@@ -120,7 +135,9 @@ func TestDeleteRemovesEdges(t *testing.T) {
 
 func TestEditOnBrokenTextFails(t *testing.T) {
 	const bad = "a: {"
+
 	s := "x"
+
 	ops := map[string]func() error{
 		"create":    func() error { _, _, e := Create(bad, "", ""); return e },
 		"set":       func() error { _, e := Set(bad, "a", "shape", &s); return e },
@@ -138,6 +155,7 @@ func TestEditOnBrokenTextFails(t *testing.T) {
 		if !errors.Is(err, ErrBrokenText) {
 			t.Errorf("%s: %v", name, err)
 		}
+
 		if _, ok := BrokenDiag(err); !ok {
 			t.Errorf("%s: no diag", name)
 		}

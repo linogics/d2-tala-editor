@@ -12,15 +12,18 @@ func byID(r RenderResult, id string) ShapeInfo {
 			return s
 		}
 	}
+
 	return ShapeInfo{}
 }
 
 func mustRender(t *testing.T, text string, o RenderOpts) RenderResult {
 	t.Helper()
+
 	r, err := Render(context.Background(), text, o)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	return r
 }
 
@@ -29,9 +32,11 @@ func TestRenderSimple(t *testing.T) {
 	if len(r.Shapes) != 2 || len(r.Edges) != 1 || len(r.Errors) != 0 {
 		t.Fatalf("got %d shapes %d edges %v", len(r.Shapes), len(r.Edges), r.Errors)
 	}
+
 	if r.Edges[0].ID != "(a -> b)[0]" {
 		t.Fatalf("edge id %q", r.Edges[0].ID)
 	}
+
 	if !strings.Contains(r.SVG, "<svg") {
 		t.Fatal("no svg")
 	}
@@ -68,6 +73,7 @@ func TestRenderContainerKinds(t *testing.T) {
 	if len(r.Errors) != 0 {
 		t.Fatal(r.Errors)
 	}
+
 	for id, want := range map[string]ShapeInfo{
 		"g": {Container: "grid", Pinnable: true}, "s": {Container: "sequence", Pinnable: true},
 		"g.x": {}, "s.x": {},
