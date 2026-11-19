@@ -13,7 +13,12 @@ import (
 type CompletionItem = d2lsp.CompletionItem
 
 // Range is a 0-based span with UTF-16 columns.
-type Range struct{ FromLine, FromCol, ToLine, ToCol int }
+type Range struct {
+	FromLine int `json:"fromLine"`
+	FromCol  int `json:"fromCol"`
+	ToLine   int `json:"toLine"`
+	ToCol    int `json:"toCol"`
+}
 
 type ThemeInfo struct {
 	ID   int64  `json:"id"`
