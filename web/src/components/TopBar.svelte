@@ -113,6 +113,7 @@
       <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" /></svg>
     {/if}
   </button>
+  <span class="ver" title="Version">{__VERSION__}</span>
   <a href="licenses.html">Licenses</a>
 </header>
 
@@ -139,6 +140,6 @@
   .notice { color: var(--danger); background: var(--danger-bg); padding: 3px 10px; border-radius: 999px; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .badge { color: var(--warn-fg); background: var(--warn-bg); padding: 3px 10px; border-radius: 999px; font-size: 12px; }
   .grid { width: 4.5em; }
-  a { color: var(--muted); font-size: 12px; }
+  a, .ver { color: var(--muted); font-size: 12px; }
   a:hover { color: var(--text); }
 </style>
