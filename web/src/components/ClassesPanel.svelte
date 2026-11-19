@@ -43,7 +43,7 @@
   }
 
   async function del() {
-    if (await app.applyEdit('setKey', { path: ['classes', cls!.name], value: null })) picked = ''
+    if (await app.applyEdit('deleteClass', { name: cls!.name })) picked = ''
   }
 </script>
 

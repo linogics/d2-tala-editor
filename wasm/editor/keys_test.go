@@ -108,3 +108,57 @@ func TestSetKeyBareClass(t *testing.T) {
 		t.Fatalf("bare key kept:\n%s", out)
 	}
 }
+
+func TestSetClassRemoves(t *testing.T) {
+	cases := []struct {
+		name, text, id string
+		value          *string
+		want           string
+	}{
+		{"dotted", "classes: {x}\na.class: x\n", "a", nil, ""},
+		{"map", "classes: {x}\na: {class: x}\n", "a", nil, ""},
+		{"nested", "classes: {x}\np: {a.class: x}\n", "p.a", nil, ""},
+		{"array to one", "classes: {x; y}\na.class: [x; y]\n", "a", ptr("y"), "y"},
+		{"array to none", "classes: {x; y}\na.class: [x; y]\n", "a", nil, ""},
+		{"edge", "classes: {x}\na -> b: {class: x}\n", "(a -> b)[0]", nil, ""},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			out, err := Set(c.text, c.id, "class", c.value)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			r := mustRender(t, out, RenderOpts{})
+			got := ""
+
+			for _, s := range r.Shapes {
+				if s.ID == c.id {
+					got = s.Attrs["class"]
+				}
+			}
+
+			if len(r.Edges) > 0 && c.id == "(a -> b)[0]" {
+				got = r.Edges[0].Attrs["class"]
+			}
+
+			if got != c.want {
+				t.Fatalf("class %q, want %q:\n%s", got, c.want, out)
+			}
+		})
+	}
+}
+
+func TestDeleteClassDropsRefs(t *testing.T) {
+	text := "classes: {x; y}\na.class: x\nb: {class: [x; y]}\nc -> d: {class: x}\n"
+
+	out, err := DeleteClass(text, "x")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	want := "classes: {y}\na\nb: {class: [y]}\nc -> d\n"
+	if out != want {
+		t.Fatalf("got:\n%s\nwant:\n%s", out, want)
+	}
+}
