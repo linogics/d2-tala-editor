@@ -1,0 +1,67 @@
+name: pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: wasm/go.mod
+          cache-dependency-path: wasm/go.sum
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - name: Lint native
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: latest
+          working-directory: wasm
+      - name: Lint wasm
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: latest
+          working-directory: wasm
+        env:
+          GOOS: js
+          GOARCH: wasm
+      - name: Go tests
+        run: cd wasm && go test ./...
+      - name: Build wasm and licenses
+        run: bash wasm/scripts/build.sh
+      - name: Web checks
+        run: |
+          cd web
+          npm ci
+          npm run check
+          npx vitest run
+          npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web/dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
