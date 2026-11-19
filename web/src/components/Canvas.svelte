@@ -2,6 +2,7 @@
   import type { AppState } from '../lib/state.svelte'
   import type { EdgeInfo, RenderResult, ShapeInfo } from '../lib/protocol'
   import { hitTest, screenToDiagram } from '../lib/coords'
+  import { templates } from '../lib/templates'
   import { resolveConnect, resolveEdgeDrop, resolveShapeDrop, type DragIntent } from '../lib/dragIntent'
 
   let { state: app }: { state: AppState } = $props()
@@ -151,6 +152,22 @@
     }
   }
 
+  // Palette drop: insert into the container under the cursor, pin at the drop point, select.
+  async function dropTemplate(e: DragEvent) {
+    const key = e.dataTransfer?.getData('application/x-d2-template')
+    const t = templates.find((x) => x.key === key)
+    if (!t || !overlay) return
+    e.preventDefault()
+    const p = screenToDiagram(overlay, e.clientX, e.clientY)
+    const parent = hitTest(shapes, p)
+    const r = await app.applyEdit('insert', { parent: parent?.id ?? '', template: t.template })
+    if (!r) return
+    if (parent?.container !== 'grid' && parent?.container !== 'sequence') {
+      await app.applyEdit('pin', { id: r.id, x: Math.max(0, Math.round(p.x)), y: Math.max(0, Math.round(p.y)) })
+    }
+    app.select({ kind: 'shape', id: r.id })
+  }
+
   function downEdge(e: PointerEvent, ed: EdgeInfo) {
     e.stopPropagation()
     app.select({ kind: 'edge', id: ed.id })
@@ -174,7 +191,7 @@
   const isSel = (kind: string, id: string) => app.selection?.kind === kind && app.selection.id === id
 </script>
 
-<div class="box" bind:this={box}>
+<div class="box" bind:this={box} role="presentation" ondragover={(e) => e.preventDefault()} ondrop={dropTemplate}>
   <div class="stage" style:width="{size.w}px" style:height="{size.h}px" style:transform="translate({view.x}px, {view.y}px) scale({view.k})">
     <!-- eslint-disable-next-line svelte/no-at-html-tags -->
     {@html app.render?.svg ?? ''}

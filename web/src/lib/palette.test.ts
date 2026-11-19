@@ -1,0 +1,56 @@
+// @vitest-environment jsdom
+import { describe, expect, it, vi } from 'vitest'
+import { flushSync, mount } from 'svelte'
+import Palette from '../components/Palette.svelte'
+import Properties from '../components/Properties.svelte'
+
+function shape(over = {}) {
+  return { id: 'a', parent: '', type: 'rectangle', container: '', x: 1, y: 2, w: 10, h: 10, pinned: false, pinnable: true, ...over }
+}
+
+function props(over = {}) {
+  const st = {
+    selection: { kind: 'shape', id: 'a' },
+    render: { shapes: [shape(over)], edges: [] },
+    applyEdit: vi.fn(async () => ({ id: 'a', text: '' })),
+    select: vi.fn(),
+  }
+  const target = document.createElement('div')
+  document.body.appendChild(target)
+  mount(Properties, { target, props: { state: st as any } })
+  flushSync()
+
+  return { st, target }
+}
+
+function change(el: Element, value: string) {
+  ;(el as HTMLInputElement).value = value
+  el.dispatchEvent(new Event('change', { bubbles: true }))
+}
+
+describe('palette and properties', () => {
+  it('palette lists 18 shapes and 8 special objects', () => {
+    const target = document.createElement('div')
+    mount(Palette, { target })
+    flushSync()
+    expect(target.querySelectorAll('.item').length).toBe(26)
+    expect(target.querySelectorAll('h4').length).toBe(2)
+  })
+
+  it('fill change sends set style.fill', () => {
+    const { st, target } = props()
+    change(target.querySelector('input[type=color]')!, '#ff0000')
+    expect(st.applyEdit).toHaveBeenCalledWith('set', { id: 'a', attr: 'style.fill', value: '#ff0000' })
+  })
+
+  it('empty label sends null', () => {
+    const { st, target } = props()
+    change(target.querySelectorAll('input')[1], '')
+    expect(st.applyEdit).toHaveBeenCalledWith('set', { id: 'a', attr: 'label', value: null })
+  })
+
+  it('pin toggle disabled for grid child', () => {
+    const { target } = props({ pinnable: false })
+    expect((target.querySelector('input[type=checkbox]') as HTMLInputElement).disabled).toBe(true)
+  })
+})

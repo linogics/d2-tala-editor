@@ -20,7 +20,7 @@
     <div class="cols">
       <Palette />
       <Canvas {state} />
-      <Properties />
+      <Properties {state} />
       <CodePane {state} />
     </div>
   </div>
