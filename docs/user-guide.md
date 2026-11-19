@@ -73,7 +73,7 @@ Create D2 classes, rename them (all uses are updated) and edit their style field
 
 ## Theme panel
 
-Overrides single theme colors (`theme-overrides` or `dark-theme-overrides` in `vars.d2-config`). The panel edits the set for the current app mode. Dark overrides only apply when the diagram sets a dark theme. "Reset all" removes the overrides.
+Overrides single theme colors (`theme-overrides` or `dark-theme-overrides` in `vars.d2-config`). Each slot is labeled with what it paints by default, for example N1 is text and B1 is borders and connection lines. Explicit styles on a shape win over the theme. The panel edits the set for the current app mode. Dark overrides only apply when the diagram sets a dark theme. "Reset all" removes the overrides.
 
 The theme picker in the top bar sets `theme-id`. The pencil button toggles sketch style.
 

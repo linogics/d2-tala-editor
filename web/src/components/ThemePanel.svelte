@@ -10,11 +10,32 @@
   $effect(() => void app.engine.call('themes', {}).then((t) => (themes = t)))
 
   const groups: [string, string[]][] = [
-    ['Neutrals (text, borders, background)', ['N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'N7']],
-    ['Base (shape fills by depth)', ['B1', 'B2', 'B3', 'B4', 'B5', 'B6']],
-    ['Alternative', ['AA2', 'AA4', 'AA5', 'AB4', 'AB5']],
+    ['Neutrals (text, background)', ['N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'N7']],
+    ['Base (borders, lines, fills)', ['B1', 'B2', 'B3', 'B4', 'B5', 'B6']],
+    ['Alternative (special shapes)', ['AA2', 'AA4', 'AA5', 'AB4', 'AB5']],
   ]
-  const field = (slot: string): Field => ({ attr: slot, name: slot, kind: 'color' })
+  // What each slot paints by default, taken from D2 v0.9.0 (d2graph GetFill/GetStroke, d2exporter, d2svg).
+  const roles: Record<string, string> = {
+    N1: 'Text and labels',
+    N2: 'Muted text, SQL column types',
+    N3: 'Markdown neutral',
+    N4: 'Diamond fill',
+    N5: 'Queue, parallelogram, hexagon fill',
+    N6: 'Markdown subtle background',
+    N7: 'Background, cloud and callout fill',
+    B1: 'Borders and connection lines',
+    B2: 'Dashed lines, SQL and class field names',
+    B3: 'Person fill',
+    B4: 'Container fill',
+    B5: 'Nested container fill, sequence actors',
+    B6: 'Shape fill',
+    AA2: 'SQL constraints, class methods',
+    AA4: 'Cylinder, stored data, package fill',
+    AA5: 'Nested cylinder, stored data, package fill',
+    AB4: 'Step, page, document fill',
+    AB5: 'Nested step, page, document fill',
+  }
+  const field = (slot: string): Field => ({ attr: slot, name: `${roles[slot]} (${slot})`, kind: 'color' })
 
   const dark = $derived(app.mode === 'dark')
   const key = $derived(dark ? 'dark-theme-overrides' : 'theme-overrides')
