@@ -77,3 +77,49 @@ func TestReorderIdempotentText(t *testing.T) {
 		t.Fatalf("%q vs %q", got, want)
 	}
 }
+
+func TestReorderQuotedIDs(t *testing.T) {
+	r := mustRender(t, "g: {grid-columns: 2\n\"a.b\"\n\"my node\"}", fast)
+	var ids []string
+	for _, s := range r.Shapes {
+		if s.Parent == "g" {
+			ids = append(ids, s.ID)
+		}
+	}
+	if len(ids) != 2 {
+		t.Fatalf("%v", ids)
+	}
+	out := must(t)(Reorder("g: {grid-columns: 2\n\"a.b\"\n\"my node\"}", ids[1], ids[0]))
+	xOrder(t, out, ids[1], ids[0])
+}
+
+func TestReorderEdgeFromSpan(t *testing.T) {
+	const in = "s: {shape: sequence_diagram\nalice.t -> bob: one\nalice -> bob: two}"
+	g, err := compile(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var first, second string
+	for _, e := range g.Edges {
+		switch e.Label.Value {
+		case "one":
+			first = e.AbsID()
+		case "two":
+			second = e.AbsID()
+		}
+	}
+	out := must(t)(ReorderEdge(in, second, first))
+	r := mustRender(t, out, fast)
+	var y1, y2 float64
+	for _, e := range r.Edges {
+		switch e.ID {
+		case first:
+			y1 = e.Points[0][1]
+		case second:
+			y2 = e.Points[0][1]
+		}
+	}
+	if y2 >= y1 {
+		t.Fatalf("not swapped (%v vs %v):\n%s", y2, y1, out)
+	}
+}

@@ -5,7 +5,6 @@ import (
 
 	"github.com/d2lang/d2/d2ast"
 	"github.com/d2lang/d2/d2graph"
-	"github.com/d2lang/d2/d2parser"
 )
 
 var ErrNotReorderable = errors.New("parent is not a grid or sequence diagram")
@@ -57,12 +56,8 @@ func Reorder(text, id, beforeID string) (string, error) {
 		names := map[string]bool{}
 		var decls []d2ast.MapNodeBox
 		for _, c := range order {
-			k, err := d2parser.ParseMapKey(c.ID)
-			if err != nil {
-				return nil, err
-			}
-			names[c.ID] = true
-			decls = append(decls, d2ast.MakeMapNodeBox(k))
+			names[c.IDVal] = true
+			decls = append(decls, d2ast.MakeMapNodeBox(&d2ast.Key{Key: d2ast.MakeKeyPath([]string{c.IDVal})}))
 		}
 		rest := decls
 		for _, n := range m.Nodes {
@@ -100,7 +95,7 @@ func ReorderEdge(text, edgeID, beforeEdgeID string) (string, error) {
 			}
 		}
 		k, b := find(edgeID), find(beforeEdgeID)
-		if e == nil || k == nil || e.Src.Parent == nil || !e.Src.Parent.IsSequenceDiagram() || (beforeEdgeID != "" && b == nil) {
+		if e == nil || k == nil || e.Src.OuterSequenceDiagram() == nil || e.Dst.OuterSequenceDiagram() == nil || (beforeEdgeID != "" && b == nil) {
 			return nil, ErrNotReorderable
 		}
 		m := mapHolding(g.AST, k)
