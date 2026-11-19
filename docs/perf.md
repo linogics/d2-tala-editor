@@ -1,20 +1,24 @@
 # TALA timing
 
 Measured with `wasm/bench` (`TestTiming`) under `GOOS=js GOARCH=wasm`, run through `go_js_wasm_exec` on Node 22.
-Graphs have random edges (math/rand seed 42, about 1.3 edges per node). Each row is one render, so the 10 node row includes warmup (font and ruler setup).
+Graphs are a random tree (each node links from an earlier random node) plus n/5 cross links between distinct nodes, math/rand seed 42.
+One warmup render of `a` (435 ms) runs before timing. Each row is one render.
 
-| Nodes | Seeds | Time (ms) |
-|-------|-------|-----------|
-| 10 | [1] | 1572 |
-| 10 | [1,2,3] | 996 |
-| 50 | [1] | 6486 |
-| 50 | [1,2,3] | 11747 |
-| 150 | [1] | did not finish in about 9 min (test killed by the 10 min go test timeout) |
-| 150 | [1,2,3] | not reached |
+| Case | Seeds | Time (ms) |
+|------|-------|-----------|
+| 10 nodes | [1] | 2525 |
+| 10 nodes | [1,2,3] | 3781 |
+| 30 nodes | [1] | 6587 |
+| 30 nodes | [1,2,3] | 18895 |
+| 50 nodes | [1] | 27264 |
+| 50 nodes | [1,2,3] | 67428 |
+| pinned 50 (all shapes have top and left) | [1] | 1497 |
+| pinned 50 (all shapes have top and left) | [1,2,3] | 4229 |
 
-A native (non-WASM) run of the same test also did not finish 150 nodes within 500 s, so the slowness is in TALA itself and not only the WASM build.
+Native (non-WASM) reference from the controller: free 50 [1] = 4971 ms, pinned 50 [1] = 272 ms.
 
 ## Decision
 
-Fast mode default: ON. 50 nodes with `[1,2,3]` took 11747 ms, which is more than 1000 ms.
-Even fast mode (`[1]`) takes 6486 ms at 50 nodes, so Task 6 should treat large graphs as slow and keep rendering off the UI thread.
+Fast mode default: ON. 50 nodes with `[1,2,3]` took 67428 ms, far more than 1000 ms.
+
+Free layout is slow (seconds at 30 to 50 nodes, even with a single seed), but fully pinned diagrams are fast. The editor therefore relies on pinning (pin on drop, pin all), and Task 6 should keep rendering off the UI thread.
