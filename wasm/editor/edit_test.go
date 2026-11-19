@@ -52,6 +52,24 @@ func TestSetAndDeleteAttr(t *testing.T) {
 	}
 }
 
+func TestClearLabel(t *testing.T) {
+	cases := []struct{ in, id, want string }{
+		{"a -> b: hi", "(a -> b)[0]", "a -> b"},
+		{"a -> b: hi {style.stroke: red}", "(a -> b)[0]", "a -> b: {style.stroke: red}"},
+		{"a -> b\n(a -> b)[0].label: hi", "(a -> b)[0]", "a -> b"},
+		{"a: A", "a", "a"},
+		{"a: A {style.fill: red}", "a", "a: {style.fill: red}"},
+	}
+	for _, c := range cases {
+		out, err := Set(c.in, c.id, "label", nil)
+		want, _ := Format(c.want)
+
+		if err != nil || out != want {
+			t.Errorf("%q: got %q want %q %v", c.in, out, want, err)
+		}
+	}
+}
+
 func TestQuotedIDs(t *testing.T) {
 	text, id, err := Create("", "", "")
 	if err != nil {

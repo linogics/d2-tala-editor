@@ -99,6 +99,16 @@ func Create(text, parent, shape string) (string, string, error) {
 // Set sets attr (relative to id) to value, or deletes it when value is nil.
 func Set(text, id, attr string, value *string) (string, error) {
 	return edit(text, func(g *d2graph.Graph) (*d2graph.Graph, error) {
+		if value == nil && attr == "label" {
+			// Delete misses the inline form ("a: A"), Set with nil clears it.
+			g, err := d2oracle.Set(g, nil, id, nil, nil)
+			if err != nil {
+				return nil, err
+			}
+
+			return d2oracle.Delete(g, nil, join(id, attr))
+		}
+
 		if value == nil {
 			return d2oracle.Delete(g, nil, join(id, attr))
 		}
