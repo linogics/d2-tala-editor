@@ -11,6 +11,10 @@ updates:
     directory: /web
     schedule:
       interval: weekly
+    ignore:
+      # svelte-check peers typescript ^5 || ^6 only.
+      - dependency-name: typescript
+        versions: ['>=7']
     groups:
       npm:
         patterns: ['*']
