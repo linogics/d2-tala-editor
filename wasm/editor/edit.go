@@ -3,8 +3,10 @@ package editor
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
+	"github.com/d2lang/d2/d2ast"
 	"github.com/d2lang/d2/d2compiler"
 	"github.com/d2lang/d2/d2format"
 	"github.com/d2lang/d2/d2graph"
@@ -99,8 +101,17 @@ func Create(text, parent, shape string) (string, string, error) {
 // Set sets attr (relative to id) to value, or deletes it when value is nil.
 // A class value in array form ("[a; b]") is written as a D2 array.
 func Set(text, id, attr string, value *string) (string, error) {
-	if attr == "class" && value != nil && strings.HasPrefix(*value, "[") {
-		return setClassList(text, id, *value)
+	if attr == "class" {
+		// The oracle neither deletes a shape's class nor replaces an array one, so old keys go first.
+		t, err := clearClass(text, id)
+		if err != nil || value == nil {
+			return t, err
+		}
+
+		text = t
+		if strings.HasPrefix(*value, "[") {
+			return setClassList(text, id, *value)
+		}
 	}
 
 	return edit(text, func(g *d2graph.Graph) (*d2graph.Graph, error) {
@@ -119,6 +130,48 @@ func Set(text, id, attr string, value *string) (string, error) {
 		}
 
 		return d2oracle.Set(g, nil, join(id, attr), nil, value)
+	})
+}
+
+// clearClass removes every class key of the shape or edge id.
+func clearClass(text, id string) (string, error) {
+	mk, err := d2parser.ParseMapKey(id)
+	if err != nil {
+		return "", err
+	}
+
+	return edit(text, func(g *d2graph.Graph) (*d2graph.Graph, error) {
+		if len(mk.Edges) > 0 {
+			return d2oracle.Delete(g, nil, join(id, "class"))
+		}
+
+		obj, ok := g.Root.HasChild(d2graph.Key(mk.Key))
+		if !ok {
+			return g, nil
+		}
+
+		all := func(string) bool { return true }
+
+		for _, ref := range obj.References {
+			if ref.InEdge() {
+				continue
+			}
+
+			last := len(ref.Key.Path) - 1
+			switch {
+			case ref.KeyPathIndex == last && ref.MapKey.Value.Map != nil:
+				// "a: {class: x}", only the direct class keys belong to a.
+				m := ref.MapKey.Value.Map
+				m.Nodes = slices.DeleteFunc(m.Nodes, func(n d2ast.MapNodeBox) bool {
+					return len(keyPath(n.MapKey)) == 1 && isClassKey(n.MapKey) && dropClass(n.MapKey, all)
+				})
+			case ref.KeyPathIndex == last-1 && isClassKey(ref.MapKey):
+				// "a.class: x", cut back to "a".
+				dropClass(ref.MapKey, all)
+			}
+		}
+
+		return g, nil
 	})
 }
 

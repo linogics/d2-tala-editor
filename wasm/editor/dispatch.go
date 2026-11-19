@@ -160,6 +160,9 @@ var handlers = map[string]handler{
 	}) (any, error) {
 		return textRes(SetKey(a.Text, a.Path, a.Value))
 	}),
+	"deleteClass": op(func(a struct{ Text, Name string }) (any, error) {
+		return textRes(DeleteClass(a.Text, a.Name))
+	}),
 	"renameClass": op(func(a struct{ Text, From, To string }) (any, error) {
 		return textRes(RenameClass(a.Text, a.From, a.To))
 	}),

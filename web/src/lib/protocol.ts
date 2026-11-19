@@ -95,6 +95,8 @@ export interface Ops {
   // Sets the scalar at a vars or classes path, null deletes it, "" writes a bare key.
   setKey: { args: T & { path: string[]; value: string | null }; result: T }
   renameClass: { args: T & { from: string; to: string }; result: T }
+  // Deletes a class definition and drops it from every shape and edge using it.
+  deleteClass: { args: T & { name: string }; result: T }
   themes: { args: Record<string, never>; result: ThemeInfo[] }
 }
 

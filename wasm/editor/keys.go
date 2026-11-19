@@ -213,6 +213,63 @@ func RenameClass(text, from, to string) (string, error) {
 	})
 }
 
+// DeleteClass removes a class definition and every reference to it.
+func DeleteClass(text, name string) (string, error) {
+	return keyEdit(text, func(m *d2ast.Map) error {
+		deleteKey(m, []string{"classes", name})
+		dropClasses(m, func(s string) bool { return strings.EqualFold(s, name) })
+
+		return nil
+	})
+}
+
+// dropClasses removes the matching class names from every class key below m.
+func dropClasses(m *d2ast.Map, match func(string) bool) {
+	m.Nodes = slices.DeleteFunc(m.Nodes, func(n d2ast.MapNodeBox) bool {
+		k := n.MapKey
+		if k == nil {
+			return false
+		}
+
+		if isClassKey(k) {
+			return dropClass(k, match)
+		}
+
+		if k.Value.Map != nil {
+			dropClasses(k.Value.Map, match)
+		}
+
+		return false
+	})
+}
+
+// dropClass removes the matching names from class key k and reports whether k itself must go.
+// A dotted key such as "a.class: x" is cut back to "a" instead, so it does not take the shape with it.
+func dropClass(k *d2ast.Key, match func(string) bool) bool {
+	if a := k.Value.Array; a != nil {
+		a.Nodes = slices.DeleteFunc(a.Nodes, func(el d2ast.ArrayNodeBox) bool {
+			s, ok := el.Unbox().(d2ast.String)
+
+			return ok && match(s.ScalarString())
+		})
+		if len(a.Nodes) > 0 {
+			return false
+		}
+	} else if s := k.Value.ScalarBox().Unbox(); s == nil || !match(s.ScalarString()) {
+		return false
+	}
+
+	if k.Key != nil && len(k.Edges) == 0 && len(k.Key.Path) > 1 {
+		k.Key.Path = k.Key.Path[:len(k.Key.Path)-1]
+		k.Value = d2ast.ValueBox{}
+		k.Primary = d2ast.ScalarBox{}
+
+		return false
+	}
+
+	return true
+}
+
 // isClassKey reports whether k assigns classes, as in "x.class: a" or "(a -> b)[0].class: a".
 func isClassKey(k *d2ast.Key) bool {
 	p := k.EdgeKey
