@@ -1,4 +1,4 @@
-const RE = /theme-id:\s*(\d+)/
+const RE = /(?<![\w-])theme-id:\s*(\d+)/
 
 export const themeIdOf = (code: string): number => Number(RE.exec(code)?.[1] ?? 0)
 
