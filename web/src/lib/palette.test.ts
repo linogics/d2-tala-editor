@@ -38,6 +38,14 @@ describe('palette and properties', () => {
     expect(target.querySelectorAll('h4').length).toBe(2)
   })
 
+  it('palette sorts each group by name', () => {
+    const target = document.createElement('div')
+    mount(Palette, { target })
+    flushSync()
+    const names = (g: string) => Array.from(target.querySelectorAll('.item')).filter((x) => !!x.querySelector(g === 'special' ? '.special' : '.icon:not(.special)')).map((x) => x.textContent!.trim())
+    for (const g of ['shape', 'special']) expect(names(g)).toEqual([...names(g)].sort((a, b) => a.localeCompare(b)))
+  })
+
   it('fill change sends set style.fill', () => {
     const { st, target } = props()
     change(target.querySelector('input[type=color]')!, '#ff0000')
