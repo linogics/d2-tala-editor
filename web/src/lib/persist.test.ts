@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { loadGrid, loadInitial, saveCode, saveGrid } from './persist'
+import { loadCols, loadGrid, loadInitial, saveCode, saveCols, saveGrid } from './persist'
 
 const store = (v: string | null) => ({ getItem: () => v }) as unknown as Storage
 
@@ -39,5 +39,17 @@ describe('grid settings', () => {
   it('ignores garbage', () => {
     expect(loadGrid(store('{"snap":1,"grid":0}'))).toEqual({ snap: false, grid: 20 })
     expect(loadGrid(store('nope'))).toEqual({ snap: false, grid: 20 })
+  })
+})
+
+describe('column widths', () => {
+  it('round trips and drops garbage', () => {
+    const m = new Map<string, string>()
+    const s = { getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => m.set(k, v) } as unknown as Storage
+    expect(loadCols(s)).toEqual({ side: null, code: null })
+    saveCols(s, { side: 300, code: null })
+    expect(loadCols(s)).toEqual({ side: 300, code: null })
+    expect(loadCols(store('{"side":-4,"code":"x"}'))).toEqual({ side: null, code: null })
+    expect(loadCols(store('nope'))).toEqual({ side: null, code: null })
   })
 })
