@@ -96,7 +96,7 @@ func TestQuotedIDs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	text, _, err = Connect(text, "Café", xid)
+	text, _, err = Connect(text, "Café", xid, "->")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -131,7 +131,7 @@ func TestRenameUpdatesEdges(t *testing.T) {
 }
 
 func TestConnectAndReconnect(t *testing.T) {
-	out, eid, err := Connect("a\nb\nc", "a", "b")
+	out, eid, err := Connect("a\nb\nc", "a", "b", "->")
 	if err != nil || !strings.Contains(out, "a -> b") {
 		t.Fatalf("%q %v", out, err)
 	}
@@ -162,7 +162,7 @@ func TestEditOnBrokenTextFails(t *testing.T) {
 		"delete":    func() error { _, e := Delete(bad, "a"); return e },
 		"move":      func() error { _, _, e := Move(bad, "a", "b"); return e },
 		"rename":    func() error { _, _, e := Rename(bad, "a", "b"); return e },
-		"connect":   func() error { _, _, e := Connect(bad, "a", "b"); return e },
+		"connect":   func() error { _, _, e := Connect(bad, "a", "b", "->"); return e },
 		"reconnect": func() error { _, e := Reconnect(bad, "(a -> b)[0]", &s, &s); return e },
 		"format":    func() error { _, e := Format(bad); return e },
 		"pin":       func() error { _, e := Pin(bad, "a", 1, 2); return e },

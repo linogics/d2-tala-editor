@@ -326,13 +326,18 @@ func Rename(text, id, name string) (string, string, error) {
 	return out, nid, err
 }
 
-func Connect(text, src, dst string) (string, string, error) {
+// Connect adds the edge "src op dst", op is one of the D2 edge ops.
+func Connect(text, src, dst, op string) (string, string, error) {
+	if _, ok := arrowOps[op]; !ok {
+		return "", "", fmt.Errorf("%w: unknown edge op %q", errBadArgs, op)
+	}
+
 	var eid string
 
 	out, err := edit(text, func(g *d2graph.Graph) (*d2graph.Graph, error) {
 		var err error
 
-		g, eid, err = d2oracle.Create(g, nil, src+" -> "+dst)
+		g, eid, err = d2oracle.Create(g, nil, src+" "+op+" "+dst)
 
 		return g, err
 	})
