@@ -16,8 +16,8 @@ Drag and drop editor for [D2](https://d2lang.com) diagrams with the TALA layout 
 - **Two-way editing.** Type D2 and the diagram re-renders. Drag, connect or edit on the canvas and the code is rewritten for you.
 - **TALA layout** in the browser, with a fast preview while you type and a full layout once you pause.
 - **Pinning.** Dropped shapes get `top` and `left`, so TALA keeps them in place. "Pin all" freezes the whole layout.
-- **Canvas tools.** Palette with shapes and special objects (SQL tables, classes, code, grids, sequence diagrams), move into and out of containers, reorder grid cells and sequence messages, connect with a drag handle, multi-select, arrow key nudging, grid snapping.
-- **Properties, classes and themes.** Edit styles of one shape or a whole selection, manage D2 classes, pick a theme, override theme colors for light and dark mode, toggle sketch style.
+- **Canvas tools.** Palette with shapes and special objects (SQL tables, classes, code, grids, sequence diagrams), move into and out of containers, reorder grid cells and sequence messages, connect with a drag handle (arrows or plain lines), multi-select, arrow key nudging, grid snapping.
+- **Properties, classes and themes.** Edit styles of one shape or a whole selection, manage D2 classes, pick a theme, override theme colors for light and dark mode, toggle sketch style. Side panel and code pane are resizable.
 - **Code editor** with D2 highlighting, completions, inline errors and highlighting of the selected shape's references.
 - **Export** to `.d2` and `.svg`. Work is autosaved in your browser.
 
