@@ -215,6 +215,14 @@ func TestSetReplacesIconAndNear(t *testing.T) {
 	if err != nil || out != "a.near: top-right\n" {
 		t.Fatalf("near: %q %v", out, err)
 	}
+
+	// The oracle writes the new value into the earlier "c" map, the old flat key must go.
+	b := "b"
+
+	out, err = Set("a\nb\nc\nc.near: a", "c", "near", &b)
+	if err != nil || strings.Count(out, "near") != 1 || !strings.Contains(out, "near: b") {
+		t.Fatalf("near object: %q %v", out, err)
+	}
 }
 
 func TestShapeChangeDropsConstraints(t *testing.T) {

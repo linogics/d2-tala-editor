@@ -160,12 +160,12 @@ func Set(text, id, attr string, value *string) (string, error) {
 		return out, err
 	}
 
-	return dedupe(out, id, attr)
+	return dedupe(out, id, attr, *value)
 }
 
-// dedupe keeps only the last key at id.attr. The oracle appends a second
-// "icon" or "near" key instead of replacing the first, and the first then wins.
-func dedupe(text, id, attr string) (string, error) {
+// dedupe keeps only the key at id.attr that holds value. The oracle adds a second
+// "icon" or "near" key instead of replacing the first, sometimes into an earlier map.
+func dedupe(text, id, attr, value string) (string, error) {
 	mk, err := d2parser.ParseMapKey(id)
 	if err != nil || len(mk.Edges) > 0 {
 		return text, nil
@@ -181,8 +181,17 @@ func dedupe(text, id, attr string) (string, error) {
 		return text, nil
 	}
 
-	for _, l := range leaves[:len(leaves)-1] {
-		l.m.Nodes = slices.DeleteFunc(l.m.Nodes, func(n d2ast.MapNodeBox) bool { return n.MapKey == l.k })
+	keep := len(leaves) - 1
+	for i, l := range leaves {
+		if l.k.Value.ScalarBox().Unbox() != nil && l.k.Value.ScalarBox().Unbox().ScalarString() == value {
+			keep = i
+		}
+	}
+
+	for i, l := range leaves {
+		if i != keep {
+			l.m.Nodes = slices.DeleteFunc(l.m.Nodes, func(n d2ast.MapNodeBox) bool { return n.MapKey == l.k })
+		}
 	}
 
 	return d2format.Format(m), nil
