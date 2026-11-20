@@ -88,13 +88,26 @@ function ok(what: string) {
 }
 
 const label = (name: string) => Array.from(host.querySelectorAll('label')).find((l) => l.textContent?.trim().startsWith(name))
-const control = (fd: Field) => label(fd.name)?.querySelector('input:not([type=color])') as HTMLInputElement | null
+const control = (fd: Field) => label(fd.name)?.querySelector('input:not([type=color]), select, textarea') as HTMLInputElement | null
+// Arrowhead fields live in a per end group as "Shape" and "Label".
+const head = (end: string, name: string) =>
+  Array.from(host.querySelectorAll(`[aria-label="${end === 'source' ? 'Source' : 'Target'} head"] label`)).find((l) => l.textContent?.trim().startsWith(name))
+const headCtl = (end: string, name: string) => head(end, name)?.querySelector('input, select, textarea') as HTMLInputElement | HTMLSelectElement | null
+// Arrowhead fields by end box, the rest by label.
+const ctl = (fd: Field) => {
+  const m = fd.attr.match(/^(source|target)-arrowhead\.(shape|label)$/)
+  return m ? headCtl(m[1], m[2] === 'shape' ? 'Shape' : 'Label') : control(fd)
+}
 const button = (text: string) => Array.from(host.querySelectorAll('button')).find((b) => b.textContent?.trim() === text)
 const shape = (id: string) => app.render!.shapes.find((s) => s.id === id)!
 const cls = (name: string) => app.render!.classes.find((c) => c.name === name)
 
 const sample = (f: Field) =>
-  f.kind === 'number' ? String(f.max ?? (f.min ?? 0) + 3) : { text: f.list === 'near' ? 'top-left' : f.list === 'shapes' ? 'circle' : f.list === 'arrowheads' ? 'diamond' : 'x', color: '#ff0000', bool: true, url: 'https://example.com/a.svg' }[f.kind]
+  f.kind === 'number'
+    ? String(f.max ?? (f.min ?? 0) + 3)
+    : f.kind === 'select'
+      ? f.options![2]
+      : { text: 'x\ny', color: '#ff0000', bool: true, url: 'https://example.com/a.svg' }[f.kind]
 
 const insert = (template: string) => raw('insert', { text: '', parent: '', template }).result as { text: string; id: string }
 
@@ -142,9 +155,12 @@ describe.skipIf(!existsSync(wasm))('ui flows (skipped: web/public/editor.wasm mi
       app.select({ kind: 'shape', id })
       flushSync()
 
-      await change(label('Label')?.querySelector('input'), 'Hello')
+      // D2 refuses line breaks in sql_table labels.
+      const multi = key !== 'sql_table'
+      await change(label('Label')?.querySelector('textarea'), multi ? 'Hello\nworld' : 'Hello')
+      if (multi) expect(app.code).toContain('"Hello\\nworld"')
       ok(`${key} label`)
-      await change(label('Label')?.querySelector('input'), '')
+      await change(label('Label')?.querySelector('textarea'), '')
       ok(`${key} clear label`)
 
       const pin = label('Pinned')?.querySelector('input') as HTMLInputElement
@@ -244,10 +260,10 @@ describe.skipIf(!existsSync(wasm))('ui flows (skipped: web/public/editor.wasm mi
       await add('c')
       for (const fd of classFields) {
         const v = sample(fd)
-        await change(control(fd), v)
+        await change(ctl(fd), v)
         ok(`set ${fd.attr}`)
         expect(cls('c')?.attrs[fd.attr], fd.attr).toBe(v === true ? 'true' : v)
-        await change(control(fd), typeof v === 'boolean' ? false : '')
+        await change(ctl(fd), typeof v === 'boolean' ? false : '')
         ok(`clear ${fd.attr}`)
         expect(cls('c'), `class kept after clearing ${fd.attr}`).toEqual({ name: 'c', attrs: {} })
       }
@@ -365,23 +381,71 @@ describe.skipIf(!existsSync(wasm))('ui flows (skipped: web/public/editor.wasm mi
   describe('edges', () => {
     it('set, toggle and clear every edge field', async () => {
       const { edgeFields } = await import('../lib/fields')
-      open(Properties, 'a -> b')
-      app.select({ kind: 'edge', id: '(a -> b)[0]' })
+      // Both ends have a head, so every arrowhead field is enabled.
+      open(Properties, 'a <-> b')
+      app.select({ kind: 'edge', id: '(a <-> b)[0]' })
       flushSync()
       for (const fd of edgeFields) {
         const v = sample(fd)
-        await change(control(fd), v)
+        await change(ctl(fd), v)
         ok(`edge ${fd.attr}=${v}`)
         expect(app.render!.edges[0].attrs[fd.attr], fd.attr).toBe(v === true ? 'true' : v)
-        await change(control(fd), typeof v === 'boolean' ? false : '')
+        await change(ctl(fd), typeof v === 'boolean' ? false : '')
         ok(`edge clear ${fd.attr}`)
         expect(app.render!.edges[0].attrs[fd.attr], fd.attr).toBeUndefined()
       }
-      await change(label('Label')?.querySelector('input'), 'go')
+      await change(label('Label')?.querySelector('textarea'), 'go')
       ok('edge label')
       await click(button('Delete'))
       ok('edge delete')
       expect(app.render!.edges).toEqual([])
+    })
+  })
+
+  describe('edge heads', () => {
+    it('toggles pick the op and keep the edge selected', async () => {
+      open(Properties, 'a -> b\n(a -> b)[0].target-arrowhead.shape: diamond')
+      app.select({ kind: 'edge', id: '(a -> b)[0]' })
+      flushSync()
+      const box = (end: string) => headCtl(end, `${end} head`)
+      const shapeSel = (end: string) => headCtl(end, 'Shape') as HTMLSelectElement
+      expect(shapeSel('target').value).toBe('diamond')
+      expect(shapeSel('target').disabled).toBe(false)
+      expect(shapeSel('source').disabled).toBe(true)
+      expect((headCtl('source', 'Label') as HTMLInputElement).disabled).toBe(false)
+
+      await change(box('target'), false)
+      ok('line')
+      expect(app.code).toContain('a -- b')
+      expect(app.selection).toEqual([{ kind: 'edge', id: '(a -- b)[0]' }])
+      // The disabled shape key stays, so the head comes back as it was.
+      expect(shapeSel('target').disabled).toBe(true)
+      expect(shapeSel('target').value).toBe('diamond')
+      expect(app.render!.edges[0].attrs['target-arrowhead.shape']).toBe('diamond')
+
+      await change(box('source'), true)
+      ok('back')
+      expect(app.code).toContain('a <- b')
+      await change(box('target'), true)
+      expect(app.code).toContain('a <-> b')
+      expect(shapeSel('target').disabled).toBe(false)
+      expect(shapeSel('target').value).toBe('diamond')
+    })
+  })
+
+  describe('near', () => {
+    it('offers positions and shapes outside its own branch', async () => {
+      open(Properties, 'a\nb\nc: {d}\nc.near: a')
+      app.select({ kind: 'shape', id: 'c' })
+      flushSync()
+      const sel = () => label('Near')!.querySelector('select')!
+      const opts = Array.from(sel().options).map((o) => o.value)
+      expect(opts).toEqual(['', 'top-left', 'top-center', 'top-right', 'center-left', 'center-right', 'bottom-left', 'bottom-center', 'bottom-right', 'a', 'b'])
+      expect(sel().value).toBe('a')
+
+      await change(sel(), 'b')
+      ok('near b')
+      expect(shape('c').attrs.near).toBe('b')
     })
   })
 

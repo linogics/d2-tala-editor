@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { AppState } from '../lib/state.svelte'
-  import { classFields } from '../lib/fields'
-  import { templates } from '../lib/templates'
+  import { classFields, groupsOf, headFields, type Field } from '../lib/fields'
   import FieldInput from './FieldInput.svelte'
+  import Group from './Group.svelte'
 
   let { state: app }: { state: AppState } = $props()
 
@@ -49,7 +49,6 @@
   }
 </script>
 
-<datalist id="shapes">{#each templates as t (t.key)}<option value={t.key}></option>{/each}</datalist>
 
 <div class="form">
   <label>New class <input placeholder="name, then Enter" onchange={add} /></label>
@@ -64,9 +63,25 @@
   {/if}
   {#if cls}
     {#key cls.name}
-      <label>Name <input value={cls.name} onchange={rename} /></label>
-      {#each classFields as fd (fd.attr)}
-        <FieldInput field={fd} value={cls.attrs[fd.attr]} placeholder={fd.kind === 'color' ? 'unset' : undefined} onset={(v) => set(fd.attr, v)} />
+      {#snippet input(fd: Field)}
+        <FieldInput field={fd} value={cls!.attrs[fd.attr]} placeholder={fd.kind === 'color' ? 'unset' : undefined} onset={(v) => set(fd.attr, v)} />
+      {/snippet}
+      {#each groupsOf(classFields) as g (g)}
+        {#if g === 'Arrows'}
+          <Group name={g} plain>
+            {#each ['source', 'target'] as end (end)}
+              <div class="head" role="group" aria-label="{end === 'source' ? 'Source' : 'Target'} head">
+                <span class="end">{end} head</span>
+                {#each headFields(end) as fd (fd.attr)}{@render input(fd)}{/each}
+              </div>
+            {/each}
+          </Group>
+        {:else}
+          <Group name={g}>
+            {#if g === 'General'}<label>Name <input value={cls.name} onchange={rename} /></label>{/if}
+            {#each classFields.filter((x) => x.group === g) as fd (fd.attr)}{@render input(fd)}{/each}
+          </Group>
+        {/if}
       {/each}
       <button class="danger" onclick={del}>Delete class</button>
     {/key}

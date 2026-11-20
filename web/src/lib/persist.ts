@@ -63,3 +63,25 @@ export function saveCols(storage: Storage | null, v: Cols): void {
     // Best effort.
   }
 }
+
+const FOLD_KEY = 'd2-editor:folded'
+
+// Side form groups the user folded, by group name.
+export function loadFolded(storage: Storage | null): Record<string, boolean> {
+  try {
+    const v = JSON.parse(storage?.getItem(FOLD_KEY) ?? 'null')
+    if (v && typeof v === 'object' && !Array.isArray(v)) return Object.fromEntries(Object.entries(v).filter(([, b]) => b === true)) as Record<string, boolean>
+  } catch {
+    // Bad or blocked storage, all open.
+  }
+
+  return {}
+}
+
+export function saveFolded(storage: Storage | null, v: Record<string, boolean>): void {
+  try {
+    storage?.setItem(FOLD_KEY, JSON.stringify(v))
+  } catch {
+    // Best effort.
+  }
+}

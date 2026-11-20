@@ -1,8 +1,9 @@
 <script lang="ts">
   import type { AppState } from '../lib/state.svelte'
   import { templates } from '../lib/templates'
-  import { arrowheads, edgeFields, fieldSteps, nears, shapeFieldsFor } from '../lib/fields'
+  import { edgeFields, enterCommits, fieldSteps, groupsOf, headFields, nears, shapeFieldsFor, type Field } from '../lib/fields'
   import FieldInput from './FieldInput.svelte'
+  import Group from './Group.svelte'
 
   let { state: app }: { state: AppState } = $props()
 
@@ -23,9 +24,13 @@
       : shape
         ? shapeFieldsFor([shape.type])
         : edge
-          ? edgeFields
+          ? edgeFields.filter((x) => !x.attr.includes('-arrowhead.'))
           : [],
   )
+  // D2 refuses near on the shape itself, its ancestors and its descendants.
+  const related = (a: string, b: string) => a === b || a.startsWith(b + '.') || b.startsWith(a + '.')
+  const nearTargets = $derived((app.render?.shapes ?? []).map((s) => s.id).filter((id) => !ids.some((x) => related(x, id))))
+  const withTargets = (fd: Field) => (fd.attr === 'near' ? { ...fd, options: [...nears, ...nearTargets] } : fd)
   const type = $derived(many.length ? (many.every((s) => s.type === many[0].type) ? many[0].type : '') : shape?.type)
   const types = $derived(type && !templates.some((t) => t.key === type) ? [type, ...templates.map((t) => t.key)] : templates.map((t) => t.key))
   const ids = $derived(app.selection.map((x) => x.id))
@@ -44,7 +49,17 @@
   const available = $derived((app.render?.classes ?? []).map((c) => c.name).filter((n) => !assigned.includes(n)))
   const setClasses = (list: string[]) => setVal('class', list.length > 1 ? `[${list.join('; ')}]` : (list[0] ?? ''))
 
-  const set = (attr: string, e: Event) => setVal(attr, (e.currentTarget as HTMLInputElement | HTMLSelectElement).value)
+  const set = (attr: string, e: Event) => setVal(attr, (e.currentTarget as HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement).value)
+
+  // An end without a head draws no arrowhead shape, its label still shows.
+  const ends = $derived(edge ? [{ end: 'source', name: 'Source', on: edge.srcArrow }, { end: 'target', name: 'Target', on: edge.dstArrow }] : [])
+
+  // The heads pick the op, so the edge gets a new id.
+  async function heads(el: HTMLInputElement, src: boolean, dst: boolean) {
+    const r = await app.applyEdit('setArrows', { id: edge!.id, src, dst })
+    if (r) app.select({ kind: 'edge', id: r.id })
+    else el.checked = !el.checked
+  }
 
   async function rename(e: Event) {
     const name = (e.currentTarget as HTMLInputElement).value.trim()
@@ -79,8 +94,6 @@
 
 <svelte:window onkeydown={key} />
 
-<datalist id="near">{#each nears as n (n)}<option value={n}></option>{/each}</datalist>
-<datalist id="arrowheads">{#each arrowheads as n (n)}<option value={n}></option>{/each}</datalist>
 
 <div class="form">
   {#if !ids.length}
@@ -88,24 +101,25 @@
     <button class="primary" onclick={() => app.applyEdit('pinAll', {})}>Pin all</button>
   {:else}
     {#key ids.join('\n')}
-      {#if many.length}
-        <p>{many.length} shapes selected</p>
-      {:else}
-        {#if shape}
-          <label>Id <input value={sel!.id.split('.').pop()} onchange={rename} /></label>
+      <Group name="General">
+        {#if many.length}
+          <p>{many.length} shapes selected</p>
+        {:else}
+          {#if shape}
+            <label>Id <input value={sel!.id.split('.').pop()} onchange={rename} /></label>
+          {/if}
+          <label>Label <textarea rows="1" value={attrs.label ?? ''} onkeydown={enterCommits} onchange={(e) => set('label', e)}></textarea></label>
         {/if}
-        <label>Label <input value={attrs.label ?? ''} onchange={(e) => set('label', e)} /></label>
-      {/if}
-      {#if shape}
-        <label>
-          Shape
-          <select value={type} onchange={(e) => set('shape', e)}>
-            {#if !type}<option value="" disabled>mixed</option>{/if}
-            {#each types as t (t)}<option value={t}>{t}</option>{/each}
-          </select>
-        </label>
-      {/if}
-      {#if shape || edge}
+        {#if shape}
+          <label>
+            Shape
+            <select value={type} onchange={(e) => set('shape', e)}>
+              {#if !type}<option value="" disabled>mixed</option>{/if}
+              {#each types as t (t)}<option value={t}>{t}</option>{/each}
+            </select>
+          </label>
+        {/if}
+        {#if shape || edge}
         <div class="classes" role="group" aria-label="Classes">
           <span class="lbl">Classes</span>
           {#each assigned as c (c)}
@@ -120,14 +134,34 @@
             <span class="none">none defined, see the Classes tab</span>
           {/if}
         </div>
+        {/if}
+      </Group>
+      {#if edge}
+        <Group name="Arrows" plain>
+          {#each ends as { end, name, on } (end)}
+            <div class="head" role="group" aria-label="{name} head">
+              <label>
+                <input type="checkbox" checked={on} onchange={(e) => heads(e.currentTarget, end === 'source' ? e.currentTarget.checked : edge.srcArrow, end === 'target' ? e.currentTarget.checked : edge.dstArrow)} />
+                {end} head
+              </label>
+              {#each headFields(end) as fd (fd.attr)}
+                <FieldInput field={fd} value={attrs[fd.attr]} disabled={fd.kind === 'select' && !on} onset={(v) => setVal(fd.attr, v)} />
+              {/each}
+            </div>
+          {/each}
+        </Group>
       {/if}
-      {#if shape && !many.length}
-        <label title={shape.pinnable ? '' : 'Not pinnable here'}>
-          <input type="checkbox" checked={shape.pinned} disabled={!shape.pinnable} onchange={pin} /> Pinned
-        </label>
-      {/if}
-      {#each fields as fd (fd.attr)}
-        <FieldInput field={fd} value={attrs[fd.attr]} placeholder={mixed(fd.attr) ? 'mixed' : fd.kind === 'color' ? 'unset' : undefined} onset={(v) => setVal(fd.attr, v)} />
+      {#each groupsOf(fields) as g (g)}
+        <Group name={g}>
+          {#if g === 'Position' && shape && !many.length}
+            <label title={shape.pinnable ? '' : 'Not pinnable here'}>
+              <input type="checkbox" checked={shape.pinned} disabled={!shape.pinnable} onchange={pin} /> Pinned
+            </label>
+          {/if}
+          {#each fields.filter((x) => x.group === g) as fd (fd.attr)}
+            <FieldInput field={withTargets(fd)} value={attrs[fd.attr]} placeholder={mixed(fd.attr) ? 'mixed' : fd.kind === 'color' ? 'unset' : undefined} onset={(v) => setVal(fd.attr, v)} />
+          {/each}
+        </Group>
       {/each}
       <button class="danger" onclick={del}>Delete</button>
     {/key}

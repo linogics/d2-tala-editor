@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { loadCols, loadGrid, loadInitial, saveCode, saveCols, saveGrid } from './persist'
+import { loadCols, loadFolded, loadGrid, loadInitial, saveCode, saveCols, saveGrid } from './persist'
 
 const store = (v: string | null) => ({ getItem: () => v }) as unknown as Storage
 
@@ -51,5 +51,10 @@ describe('column widths', () => {
     expect(loadCols(s)).toEqual({ side: 300, code: null })
     expect(loadCols(store('{"side":-4,"code":"x"}'))).toEqual({ side: null, code: null })
     expect(loadCols(store('nope'))).toEqual({ side: null, code: null })
+  })
+  it('folded keeps only true flags and survives junk', () => {
+    expect(loadFolded(store('{"Font":true,"Fill":false,"x":1}'))).toEqual({ Font: true })
+    expect(loadFolded(store('[1]'))).toEqual({})
+    expect(loadFolded(store('nope'))).toEqual({})
   })
 })

@@ -12,7 +12,9 @@ const glue = fileURLToPath(new URL('../../public/wasm_exec.js', import.meta.url)
 const samples = (f: Field): string[] =>
   f.kind === 'number'
     ? [f.min, f.max].filter((n) => n != null).map(String)
-    : [{ text: f.list === 'near' ? 'top-left' : f.list === 'arrowheads' ? 'diamond' : 'x', color: '#ff0000', bool: 'true', url: 'https://example.com/a.svg' }[f.kind]]
+    : f.kind === 'select'
+      ? f.options!
+      : [{ text: 'x', color: '#ff0000', bool: 'true', url: 'https://example.com/a.svg' }[f.kind]]
 
 // Every option the Properties panel offers must be accepted by D2 on every shape it offers it for.
 describe.skipIf(!existsSync(wasm))('every field on every shape (skipped: web/public/editor.wasm missing, run wasm/scripts/build.sh)', () => {

@@ -35,7 +35,7 @@
     AB4: 'Step, page, document fill',
     AB5: 'Nested step, page, document fill',
   }
-  const field = (slot: string): Field => ({ attr: slot, name: `${roles[slot]} (${slot})`, kind: 'color' })
+  const field = (slot: string): Field => ({ attr: slot, name: `${roles[slot]} (${slot})`, kind: 'color', group: 'Theme' })
 
   const dark = $derived(app.mode === 'dark')
   const key = $derived(dark ? 'dark-theme-overrides' : 'theme-overrides')
@@ -66,5 +66,5 @@
 <style>
   p { color: var(--muted); margin: 0 0 12px; }
   .warn { color: var(--warn-fg); background: var(--warn-bg); padding: 6px 8px; border-radius: 6px; }
-  h4 { margin: 14px 0 8px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+  h4 { margin: 16px 0 8px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text); }
 </style>
