@@ -321,11 +321,13 @@ func Delete(text, id string, keepChildren bool) (string, error) {
 	return edit(text, func(g *d2graph.Graph) (*d2graph.Graph, error) {
 		if !keepChildren {
 			var kids []string
+
 			for _, o := range g.Objects {
 				if strings.HasPrefix(o.AbsID(), id+".") {
 					kids = append(kids, o.AbsID())
 				}
 			}
+
 			slices.SortFunc(kids, func(a, b string) int { return strings.Count(b, ".") - strings.Count(a, ".") })
 
 			for _, k := range kids {
