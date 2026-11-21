@@ -217,6 +217,16 @@ describe.skipIf(!existsSync(wasm))('ui flows (skipped: web/public/editor.wasm mi
         app.dispose()
       }
     })
+
+    it('making a grid unpins the direct children', async () => {
+      open(Properties, 'a: {b: {top: 10\nleft: 10}\nc}')
+      app.select({ kind: 'shape', id: 'a' })
+      flushSync()
+      await change(label('Rows')?.querySelector('input'), '2')
+      ok('grid')
+      expect(shape('a.b').pinned).toBe(false)
+      expect(shape('a').attrs['grid-rows']).toBe('2')
+    })
   })
 
   describe('classes panel', () => {

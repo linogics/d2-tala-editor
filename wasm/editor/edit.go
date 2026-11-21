@@ -139,6 +139,10 @@ func Set(text, id, attr string, value *string) (string, error) {
 		text = t
 	}
 
+	if value == nil && slices.Contains(gridKeys, attr) {
+		return dropKey(text, id, attr)
+	}
+
 	out, err := edit(text, func(g *d2graph.Graph) (*d2graph.Graph, error) {
 		if value == nil && attr == "label" {
 			// Delete misses the inline form ("a: A"), Set with nil clears it.
@@ -161,6 +165,25 @@ func Set(text, id, attr string, value *string) (string, error) {
 	}
 
 	return dedupe(out, id, attr, *value)
+}
+
+// gridKeys are the keys d2oracle.Delete leaves in place.
+var gridKeys = []string{"grid-rows", "grid-columns", "grid-gap", "vertical-gap", "horizontal-gap"}
+
+// dropKey removes every id.attr key straight from the AST.
+func dropKey(text, id, attr string) (string, error) {
+	mk, err := d2parser.ParseMapKey(id)
+	if err != nil {
+		return "", err
+	}
+
+	return edit(text, func(g *d2graph.Graph) (*d2graph.Graph, error) {
+		for _, l := range findLeaves(g.AST, append(keyPath(mk), attr)) {
+			l.m.Nodes = slices.DeleteFunc(l.m.Nodes, func(n d2ast.MapNodeBox) bool { return n.MapKey == l.k })
+		}
+
+		return g, nil
+	})
 }
 
 // dedupe keeps only the key at id.attr that holds value. The oracle adds a second

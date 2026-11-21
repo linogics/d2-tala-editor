@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { AppState } from '../lib/state.svelte'
+  import type { AppState, Step } from '../lib/state.svelte'
   import { templates } from '../lib/templates'
   import { edgeFields, enterCommits, fieldSteps, groupsOf, headFields, nears, shapeFieldsFor, type Field } from '../lib/fields'
   import FieldInput from './FieldInput.svelte'
@@ -37,12 +37,20 @@
   // Members disagree on this attr.
   const mixed = (attr: string) => many.some((s) => s.attrs[attr] !== many[0].attrs[attr])
 
+  const gridAttrs = ['grid-rows', 'grid-columns']
+  // The Grid group opens on grids and stays folded elsewhere.
+  const isGrid = $derived(gridAttrs.some((a) => attrs[a] != null))
+
   const setVal = (attr: string, value: string) => {
     const v = value.trim() || null
     if (shape && !many.length && (attr === 'top' || attr === 'left')) return app.applyEdits(fieldSteps(shape, attr, v))
-    if (ids.length === 1) return app.applyEdit('set', { id: ids[0], attr, value: v })
+    // D2 refuses top and left on grid cells, so making a grid unpins its direct children in the same step.
+    const unpin = (id: string): Step[] =>
+      v && gridAttrs.includes(attr) ? (app.render?.shapes ?? []).filter((s) => s.parent === id && s.pinned).map((s) => ['unpin', { id: s.id }]) : []
+    const steps = ids.flatMap((id): Step[] => [...unpin(id), ['set', { id, attr, value: v }]])
+    if (steps.length === 1) return app.applyEdit('set', { id: ids[0], attr, value: v })
 
-    return app.applyEdits(ids.map((id) => ['set', { id, attr, value: v }]))
+    return app.applyEdits(steps)
   }
   // Classes come back as "a;b", one is written as a scalar and several as a D2 array.
   const assigned = $derived(attrs.class ? attrs.class.split(';') : [])
@@ -150,7 +158,7 @@
         </Group>
       {/if}
       {#each groupsOf(fields) as g (g)}
-        <Group name={g}>
+        <Group name={g} open={g === 'Grid' ? isGrid : undefined}>
           {#if g === 'Position' && shape && !many.length}
             <label title={shape.pinnable ? '' : 'Not pinnable here'}>
               <input type="checkbox" checked={shape.pinned} disabled={!shape.pinnable} onchange={pin} /> Pinned

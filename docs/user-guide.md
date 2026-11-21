@@ -78,7 +78,9 @@ A burst of arrow key presses is pinned as one edit once you pause.
 
 Shows the fields of the selected shape or edge: label, shape type, style (fill, stroke, font, opacity, and more), `near`, arrowheads for edges, classes and the pin checkbox. Clearing a field, or picking "(unset)" in a list, removes the key from the code. `near` lists the positions and every shape outside the selected shape's own branch. Edges have head checkboxes, see [Connecting shapes](#connecting-shapes). Text fields such as the label and tooltip take several lines: Shift+Enter adds a line break, Enter applies the value. SQL tables refuse labels with line breaks.
 
-Fields sit in titled groups: General, Arrows, Position, Fill, Stroke, Font, Effects and Extras. Click a title to fold its group. Folds are kept per group name in the browser and apply to the Classes panel too.
+Fields sit in titled groups: General, Arrows, Position, Grid, Fill, Stroke, Font, Effects and Extras. Click a title to fold its group. Folds are kept per group name in the browser and apply to the Classes panel too. Grid is the exception: it opens on grids and stays folded elsewhere.
+
+Grid sets `grid-rows`, `grid-columns` and the gaps. A grid is a normal shape with these keys, so the Shape picker still shows its shape, such as rectangle. Making a shape a grid unpins its direct children, since D2 refuses top and left on grid cells.
 
 With several shapes selected, a field shows a value only when all of them agree, and setting it writes it on every shape. Deleting a container deletes its children, Shift keeps them.
 

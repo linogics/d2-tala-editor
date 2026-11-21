@@ -48,7 +48,7 @@ describe('palette and properties', () => {
 
   it('properties shows titled groups', () => {
     const { target } = props()
-    expect(Array.from(target.querySelectorAll('summary')).map((x) => x.textContent)).toEqual(['General', 'Position', 'Fill', 'Stroke', 'Font', 'Effects', 'Extras'])
+    expect(Array.from(target.querySelectorAll('summary')).map((x) => x.textContent)).toEqual(['General', 'Position', 'Grid', 'Fill', 'Stroke', 'Font', 'Effects', 'Extras'])
   })
 
   it('fill change sends set style.fill', () => {

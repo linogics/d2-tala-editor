@@ -151,6 +151,15 @@ func TestDeleteRemovesEdges(t *testing.T) {
 	}
 }
 
+func TestClearGridKey(t *testing.T) {
+	for _, text := range []string{"a: {grid-rows: 4\nb}", "a.grid-rows: 4\na.b"} {
+		out, err := Set(text, "a", "grid-rows", nil)
+		if err != nil || strings.Contains(out, "grid") {
+			t.Fatalf("%q: %q %v", text, out, err)
+		}
+	}
+}
+
 func TestDeleteContainer(t *testing.T) {
 	const text = "x -> a.b\na: {b: {c}\nd}\na.e"
 
