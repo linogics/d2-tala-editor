@@ -158,7 +158,12 @@ func Set(text, id, attr string, value *string) (string, error) {
 			return d2oracle.Delete(g, nil, join(id, attr))
 		}
 
-		return d2oracle.Set(g, nil, join(id, attr), nil, value)
+		g, err := d2oracle.Set(g, nil, join(id, attr), nil, value)
+		if err == nil && isLabelAttr(attr) {
+			quoteLabel(g, id, attr)
+		}
+
+		return g, err
 	})
 	if err != nil || value == nil {
 		return out, err
@@ -356,7 +361,20 @@ func Move(text, id, newParent string) (string, string, error) {
 	return out, newID, err
 }
 
+// Rename changes the id of a shape. A shape that shows its id as label keeps
+// that text as an explicit label, so only the id changes.
 func Rename(text, id, name string) (string, string, error) {
+	g, err := compile(text)
+	if err != nil {
+		return "", "", err
+	}
+
+	if o := lookup(g, id); o != nil && labelKey(o.Label) == nil {
+		if text, err = Set(text, id, "label", &o.Label.Value); err != nil {
+			return "", "", err
+		}
+	}
+
 	var nid string
 
 	out, err := edit(text, func(g *d2graph.Graph) (*d2graph.Graph, error) {
