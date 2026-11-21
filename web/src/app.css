@@ -150,9 +150,15 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
   flex: none;
 }
 
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
-::-webkit-scrollbar-track { background: transparent; }
+/* Thin scrollbars. The track is transparent so each panel shows its own background. */
+:root { --sb-thumb: var(--border-strong); --sb-track: transparent; --sb-size: 6px; }
+::-webkit-scrollbar { width: var(--sb-size); height: var(--sb-size); }
+::-webkit-scrollbar-thumb { background: var(--sb-thumb); border-radius: 3px; }
+::-webkit-scrollbar-track { background: var(--sb-track); }
+::-webkit-scrollbar-corner { background: var(--sb-track); }
+@supports not selector(::-webkit-scrollbar) {
+  * { scrollbar-width: thin; scrollbar-color: var(--sb-thumb) var(--sb-track); }
+}
 
 /* Side panel forms: Properties, Classes, Theme. */
 .form { padding: 12px; overflow-y: auto; }
