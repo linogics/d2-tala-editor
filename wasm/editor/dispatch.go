@@ -109,7 +109,12 @@ var handlers = map[string]handler{
 	}) (any, error) {
 		return textRes(Set(a.Text, a.ID, a.Attr, a.Value))
 	}),
-	"delete": op(func(a idArgs) (any, error) { return textRes(Delete(a.Text, a.ID)) }),
+	"delete": op(func(a struct {
+		Text, ID     string
+		KeepChildren bool
+	}) (any, error) {
+		return textRes(Delete(a.Text, a.ID, a.KeepChildren))
+	}),
 	"move": op(func(a struct{ Text, ID, Parent string }) (any, error) {
 		t, id, err := Move(a.Text, a.ID, a.Parent)
 
@@ -120,8 +125,20 @@ var handlers = map[string]handler{
 
 		return textIDRes(t, id, err)
 	}),
-	"connect": op(func(a struct{ Text, Src, Dst string }) (any, error) {
-		t, id, err := Connect(a.Text, a.Src, a.Dst)
+	"connect": op(func(a struct{ Text, Src, Dst, Op string }) (any, error) {
+		if a.Op == "" {
+			a.Op = "->"
+		}
+
+		t, id, err := Connect(a.Text, a.Src, a.Dst, a.Op)
+
+		return textIDRes(t, id, err)
+	}),
+	"setArrows": op(func(a struct {
+		Text, ID string
+		Src, Dst bool
+	}) (any, error) {
+		t, id, err := SetArrows(a.Text, a.ID, a.Src, a.Dst)
 
 		return textIDRes(t, id, err)
 	}),

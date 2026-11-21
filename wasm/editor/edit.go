@@ -139,6 +139,10 @@ func Set(text, id, attr string, value *string) (string, error) {
 		text = t
 	}
 
+	if value == nil && slices.Contains(gridKeys, attr) {
+		return dropKey(text, id, attr)
+	}
+
 	out, err := edit(text, func(g *d2graph.Graph) (*d2graph.Graph, error) {
 		if value == nil && attr == "label" {
 			// Delete misses the inline form ("a: A"), Set with nil clears it.
@@ -160,12 +164,31 @@ func Set(text, id, attr string, value *string) (string, error) {
 		return out, err
 	}
 
-	return dedupe(out, id, attr)
+	return dedupe(out, id, attr, *value)
 }
 
-// dedupe keeps only the last key at id.attr. The oracle appends a second
-// "icon" or "near" key instead of replacing the first, and the first then wins.
-func dedupe(text, id, attr string) (string, error) {
+// gridKeys are the keys d2oracle.Delete leaves in place.
+var gridKeys = []string{"grid-rows", "grid-columns", "grid-gap", "vertical-gap", "horizontal-gap"}
+
+// dropKey removes every id.attr key straight from the AST.
+func dropKey(text, id, attr string) (string, error) {
+	mk, err := d2parser.ParseMapKey(id)
+	if err != nil {
+		return "", err
+	}
+
+	return edit(text, func(g *d2graph.Graph) (*d2graph.Graph, error) {
+		for _, l := range findLeaves(g.AST, append(keyPath(mk), attr)) {
+			l.m.Nodes = slices.DeleteFunc(l.m.Nodes, func(n d2ast.MapNodeBox) bool { return n.MapKey == l.k })
+		}
+
+		return g, nil
+	})
+}
+
+// dedupe keeps only the key at id.attr that holds value. The oracle adds a second
+// "icon" or "near" key instead of replacing the first, sometimes into an earlier map.
+func dedupe(text, id, attr, value string) (string, error) {
 	mk, err := d2parser.ParseMapKey(id)
 	if err != nil || len(mk.Edges) > 0 {
 		return text, nil
@@ -181,8 +204,17 @@ func dedupe(text, id, attr string) (string, error) {
 		return text, nil
 	}
 
-	for _, l := range leaves[:len(leaves)-1] {
-		l.m.Nodes = slices.DeleteFunc(l.m.Nodes, func(n d2ast.MapNodeBox) bool { return n.MapKey == l.k })
+	keep := len(leaves) - 1
+	for i, l := range leaves {
+		if l.k.Value.ScalarBox().Unbox() != nil && l.k.Value.ScalarBox().Unbox().ScalarString() == value {
+			keep = i
+		}
+	}
+
+	for i, l := range leaves {
+		if i != keep {
+			l.m.Nodes = slices.DeleteFunc(l.m.Nodes, func(n d2ast.MapNodeBox) bool { return n.MapKey == l.k })
+		}
 	}
 
 	return d2format.Format(m), nil
@@ -283,8 +315,29 @@ func clearClass(text, id string) (string, error) {
 	})
 }
 
-func Delete(text, id string) (string, error) {
+// Delete removes id. Without keepChildren its descendants go too, deepest first,
+// since the oracle lifts the children of a deleted container into its parent.
+func Delete(text, id string, keepChildren bool) (string, error) {
 	return edit(text, func(g *d2graph.Graph) (*d2graph.Graph, error) {
+		if !keepChildren {
+			var kids []string
+
+			for _, o := range g.Objects {
+				if strings.HasPrefix(o.AbsID(), id+".") {
+					kids = append(kids, o.AbsID())
+				}
+			}
+
+			slices.SortFunc(kids, func(a, b string) int { return strings.Count(b, ".") - strings.Count(a, ".") })
+
+			for _, k := range kids {
+				var err error
+				if g, err = d2oracle.Delete(g, nil, k); err != nil {
+					return nil, err
+				}
+			}
+		}
+
 		return d2oracle.Delete(g, nil, id)
 	})
 }
@@ -317,13 +370,18 @@ func Rename(text, id, name string) (string, string, error) {
 	return out, nid, err
 }
 
-func Connect(text, src, dst string) (string, string, error) {
+// Connect adds the edge "src op dst", op is one of the D2 edge ops.
+func Connect(text, src, dst, op string) (string, string, error) {
+	if _, ok := arrowOps[op]; !ok {
+		return "", "", fmt.Errorf("%w: unknown edge op %q", errBadArgs, op)
+	}
+
 	var eid string
 
 	out, err := edit(text, func(g *d2graph.Graph) (*d2graph.Graph, error) {
 		var err error
 
-		g, eid, err = d2oracle.Create(g, nil, src+" -> "+dst)
+		g, eid, err = d2oracle.Create(g, nil, src+" "+op+" "+dst)
 
 		return g, err
 	})

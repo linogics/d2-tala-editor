@@ -56,6 +56,9 @@ type EdgeInfo struct {
 	Dst    string            `json:"dst"`
 	Points [][2]float64      `json:"points"`
 	Attrs  map[string]string `json:"attrs"`
+	// SrcArrow and DstArrow tell which ends have a head, they pick the op.
+	SrcArrow bool `json:"srcArrow"`
+	DstArrow bool `json:"dstArrow"`
 }
 
 // Diag is a diagnostic. Line is 0-based and Col is a UTF-16 column.
@@ -206,6 +209,7 @@ func Render(ctx context.Context, text string, opts RenderOpts) (RenderResult, er
 		ei := EdgeInfo{ID: c.ID, Src: c.Src, Dst: c.Dst, Points: [][2]float64{}, Attrs: map[string]string{}}
 		if e := edges[c.ID]; e != nil {
 			ei.Attrs = edgeAttrs(e)
+			ei.SrcArrow, ei.DstArrow = e.SrcArrow, e.DstArrow
 		}
 
 		for _, p := range c.Route {

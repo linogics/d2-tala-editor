@@ -39,3 +39,49 @@ export function saveGrid(storage: Storage | null, v: { snap: boolean; grid: numb
     // Best effort.
   }
 }
+
+const COLS_KEY = 'd2-editor:cols'
+
+// Column widths in px, null keeps the default width.
+export type Cols = { side: number | null; code: number | null }
+
+export function loadCols(storage: Storage | null): Cols {
+  const ok = (n: unknown) => (typeof n === 'number' && n > 0 ? n : null)
+  try {
+    const v = JSON.parse(storage?.getItem(COLS_KEY) ?? 'null')
+
+    return { side: ok(v?.side), code: ok(v?.code) }
+  } catch {
+    return { side: null, code: null }
+  }
+}
+
+export function saveCols(storage: Storage | null, v: Cols): void {
+  try {
+    storage?.setItem(COLS_KEY, JSON.stringify(v))
+  } catch {
+    // Best effort.
+  }
+}
+
+const FOLD_KEY = 'd2-editor:folded'
+
+// Side form groups the user folded, by group name.
+export function loadFolded(storage: Storage | null): Record<string, boolean> {
+  try {
+    const v = JSON.parse(storage?.getItem(FOLD_KEY) ?? 'null')
+    if (v && typeof v === 'object' && !Array.isArray(v)) return Object.fromEntries(Object.entries(v).filter(([, b]) => b === true)) as Record<string, boolean>
+  } catch {
+    // Bad or blocked storage, all open.
+  }
+
+  return {}
+}
+
+export function saveFolded(storage: Storage | null, v: Record<string, boolean>): void {
+  try {
+    storage?.setItem(FOLD_KEY, JSON.stringify(v))
+  } catch {
+    // Best effort.
+  }
+}

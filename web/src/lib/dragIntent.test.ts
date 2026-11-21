@@ -34,7 +34,7 @@ describe('dragIntent', () => {
   })
 
   it('message drag resolves to reorderEdge', () => {
-    const e = (id: string, y: number): EdgeInfo => ({ id, src: 's.a', dst: 's.b', points: [[0, y], [10, y]], attrs: {} })
+    const e = (id: string, y: number): EdgeInfo => ({ id, src: 's.a', dst: 's.b', points: [[0, y], [10, y]], attrs: {}, srcArrow: false, dstArrow: true })
     const es = [e('m1', 10), e('m2', 20), e('m3', 30)]
     expect(resolveEdgeDrop(es, es[0], { x: 0, y: 25 })).toEqual({ kind: 'reorderEdge', id: 'm1', before: 'm3' })
     expect(resolveEdgeDrop(es, es[0], { x: 0, y: 99 })).toEqual({ kind: 'reorderEdge', id: 'm1', before: '' })

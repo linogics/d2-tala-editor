@@ -87,6 +87,7 @@ func TestDispatchEveryOp(t *testing.T) {
 		"rename":      `{"text":"a","id":"a","name":"z"}`,
 		"connect":     `{"text":"` + two + `","src":"a","dst":"b"}`,
 		"reconnect":   `{"text":"a -> b\nc","id":"(a -> b)[0]","dst":"c"}`,
+		"setArrows":   `{"text":"a -> b","id":"(a -> b)[0]","src":false,"dst":false}`,
 		"pin":         `{"text":"a","id":"a","x":10,"y":20}`,
 		"unpin":       `{"text":"a: {top: 1\nleft: 1}","id":"a"}`,
 		"pinAll":      `{"text":"a: {top: 1\nleft: 1}"}`,

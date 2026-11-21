@@ -7,4 +7,5 @@ export interface Template {
   template: string
 }
 
-export const templates = raw as Template[]
+// A-Z by label, for the palette and the shape pickers.
+export const templates = [...(raw as Template[])].sort((a, b) => a.label.localeCompare(b.label))

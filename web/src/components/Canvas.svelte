@@ -174,7 +174,7 @@
     if (!d.moved) return
     const intent = intentFor(d, screenToDiagram(overlay!, e.clientX, e.clientY))
     const g = ghosts[0] ?? null
-    const r = await run(intent, g)
+    const r = await run(intent, g, e.altKey)
     if (r && g) dropRender = app.render
     else ghosts = []
   }
@@ -186,7 +186,8 @@
     return app.applyEdits(ghosts.map((g) => ['pin', { id: g.id, x: rnd(g.x), y: rnd(g.y) }]))
   }
 
-  async function run(i: DragIntent, g: Ghost | null): Promise<unknown> {
+  // Alt held at release connects with a plain line instead of an arrow.
+  async function run(i: DragIntent, g: Ghost | null, alt = false): Promise<unknown> {
     switch (i.kind) {
       case 'pin':
         return app.applyEdit('pin', { id: i.id, x: rnd(i.x), y: rnd(i.y) })
@@ -195,7 +196,7 @@
       case 'reorderEdge':
         return app.applyEdit('reorderEdge', i)
       case 'connect':
-        return app.applyEdit('connect', { src: i.src, dst: i.dst })
+        return app.applyEdit('connect', { src: i.src, dst: i.dst, op: alt ? '--' : '->' })
       case 'move': {
         const r = await app.applyEdit('move', { id: i.id, parent: i.parent })
         if (!r || !g || byId(i.parent)?.container) return r
@@ -392,7 +393,7 @@
     background-size: var(--g) var(--g);
     background-position: var(--gx) var(--gy);
   }
-  .axis { position: absolute; pointer-events: none; border: 0 dashed var(--secondary); opacity: 0.5; }
+  .axis { position: absolute; pointer-events: none; border: 0 solid var(--secondary); }
   .axis.v { top: 0; bottom: 0; left: var(--gx); border-left-width: 1px; }
   .axis.h { left: 0; right: 0; top: var(--gy); border-top-width: 1px; }
   .gridfill { fill: url(#grid); pointer-events: none; }

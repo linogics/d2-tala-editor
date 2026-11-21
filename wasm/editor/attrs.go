@@ -15,6 +15,8 @@ func attrs(a *d2graph.Attributes) map[string]string {
 	for k, v := range map[string]*d2graph.Scalar{
 		"top": a.Top, "left": a.Left, "width": a.WidthAttr, "height": a.HeightAttr,
 		"tooltip": a.Tooltip, "link": a.Link,
+		"grid-rows": a.GridRows, "grid-columns": a.GridColumns, "grid-gap": a.GridGap,
+		"vertical-gap": a.VerticalGap, "horizontal-gap": a.HorizontalGap,
 		"style.fill": s.Fill, "style.stroke": s.Stroke, "style.stroke-width": s.StrokeWidth,
 		"style.stroke-dash": s.StrokeDash, "style.border-radius": s.BorderRadius, "style.opacity": s.Opacity,
 		"style.font-size": s.FontSize, "style.font-color": s.FontColor, "style.shadow": s.Shadow,

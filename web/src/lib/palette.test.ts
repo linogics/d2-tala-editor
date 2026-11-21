@@ -38,6 +38,19 @@ describe('palette and properties', () => {
     expect(target.querySelectorAll('h4').length).toBe(2)
   })
 
+  it('palette sorts each group by name', () => {
+    const target = document.createElement('div')
+    mount(Palette, { target })
+    flushSync()
+    const names = (g: string) => Array.from(target.querySelectorAll('.item')).filter((x) => !!x.querySelector(g === 'special' ? '.special' : '.icon:not(.special)')).map((x) => x.textContent!.trim())
+    for (const g of ['shape', 'special']) expect(names(g)).toEqual([...names(g)].sort((a, b) => a.localeCompare(b)))
+  })
+
+  it('properties shows titled groups', () => {
+    const { target } = props()
+    expect(Array.from(target.querySelectorAll('summary')).map((x) => x.textContent)).toEqual(['General', 'Position', 'Grid', 'Fill', 'Stroke', 'Font', 'Effects', 'Extras'])
+  })
+
   it('fill change sends set style.fill', () => {
     const { st, target } = props()
     change(target.querySelector('input[type=color]')!, '#ff0000')
@@ -46,7 +59,7 @@ describe('palette and properties', () => {
 
   it('empty label sends null', () => {
     const { st, target } = props()
-    change(target.querySelectorAll('input')[1], '')
+    change(target.querySelector('textarea')!, '')
     expect(st.applyEdit).toHaveBeenCalledWith('set', { id: 'a', attr: 'label', value: null })
   })
 

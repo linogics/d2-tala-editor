@@ -32,6 +32,8 @@ export interface EdgeInfo {
   dst: string
   points: [number, number][]
   attrs: Record<string, string>
+  srcArrow: boolean
+  dstArrow: boolean
 }
 
 export interface RenderResult {
@@ -79,10 +81,12 @@ export interface Ops {
   create: { args: T & { parent: string; shape: string }; result: Id }
   insert: { args: T & { parent: string; template: string }; result: Id }
   set: { args: Id & { attr: string; value: string | null }; result: T }
-  delete: { args: Id; result: T }
+  delete: { args: Id & { keepChildren?: boolean }; result: T }
   move: { args: Id & { parent: string }; result: Id }
   rename: { args: Id & { name: string }; result: Id }
-  connect: { args: T & { src: string; dst: string }; result: Id }
+  connect: { args: T & { src: string; dst: string; op?: '->' | '<-' | '<->' | '--' }; result: Id }
+  // Picks the op by which ends have a head, the edge id changes with it.
+  setArrows: { args: Id & { src: boolean; dst: boolean }; result: Id }
   reconnect: { args: Id & { src: string | null; dst: string | null }; result: T }
   pin: { args: Id & { x: number; y: number }; result: T }
   unpin: { args: Id; result: T }

@@ -2,12 +2,13 @@
   import { createEngine, createWorker } from './lib/engine'
   import { createAppState } from './lib/state.svelte'
   import { currentMode } from './lib/mode'
-  import { loadGrid, loadInitial, saveCode, saveGrid } from './lib/persist'
+  import { loadCols, loadGrid, loadInitial, saveCode, saveCols, saveGrid } from './lib/persist'
   import TopBar from './components/TopBar.svelte'
   import Palette from './components/Palette.svelte'
   import Canvas from './components/Canvas.svelte'
   import Side from './components/Side.svelte'
   import CodePane from './components/CodePane.svelte'
+  import Resizer from './components/Resizer.svelte'
 
   const app = createAppState(createEngine(createWorker()))
   let examples = $state<{ name: string; code: string }[]>([])
@@ -24,6 +25,14 @@
 
   Object.assign(app, loadGrid(storage), { mode: currentMode() })
   $effect(() => saveGrid(storage, { snap: app.snap, grid: app.grid }))
+
+  const cols = $state(loadCols(storage))
+  $effect(() => saveCols(storage, { side: cols.side, code: cols.code }))
+  // Palette, canvas, side and code, the canvas keeps at least 200px.
+  const PALETTE = 168
+  const CANVAS = 200
+  const codeW = () => cols.code ?? 0.34 * innerWidth
+  const sideW = () => cols.side ?? 248
 
   app.engine.onProgress((l, t) => ((loaded = l), (total = t)))
   app.engine.ready.then(() => (ready = true))
@@ -56,10 +65,12 @@
 {#await init then}
   <div class="app">
     <TopBar {app} {examples} />
-    <div class="cols">
+    <div class="cols" style:grid-template-columns="{PALETTE}px minmax({CANVAS}px, 1fr) 0 {sideW()}px 0 {cols.code ? `${cols.code}px` : '34%'}">
       <Palette />
       <Canvas state={app} />
+      <Resizer bind:width={cols.side} min={180} max={() => innerWidth - PALETTE - CANVAS - codeW()} label="Resize properties column" />
       <Side state={app} />
+      <Resizer bind:width={cols.code} min={200} max={() => innerWidth - PALETTE - CANVAS - sideW()} label="Resize code column" />
       <CodePane state={app} />
     </div>
   </div>
@@ -67,7 +78,7 @@
 
 <style>
   .app { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
-  .cols { display: grid; grid-template-columns: 168px 1fr 248px 34%; min-height: 0; }
+  .cols { display: grid; min-height: 0; }
   .overlay { position: fixed; inset: 0; z-index: 10; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
   .brand { font-size: 22px; font-weight: 700; color: var(--primary); }
   .track { width: 260px; height: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }

@@ -96,7 +96,7 @@ func TestQuotedIDs(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	text, _, err = Connect(text, "Café", xid)
+	text, _, err = Connect(text, "Café", xid, "->")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -131,7 +131,7 @@ func TestRenameUpdatesEdges(t *testing.T) {
 }
 
 func TestConnectAndReconnect(t *testing.T) {
-	out, eid, err := Connect("a\nb\nc", "a", "b")
+	out, eid, err := Connect("a\nb\nc", "a", "b", "->")
 	if err != nil || !strings.Contains(out, "a -> b") {
 		t.Fatalf("%q %v", out, err)
 	}
@@ -145,9 +145,32 @@ func TestConnectAndReconnect(t *testing.T) {
 }
 
 func TestDeleteRemovesEdges(t *testing.T) {
-	out, err := Delete("a -> b\nb -> c", "b")
+	out, err := Delete("a -> b\nb -> c", "b", false)
 	if err != nil || strings.Contains(out, "->") {
 		t.Fatalf("%q %v", out, err)
+	}
+}
+
+func TestClearGridKey(t *testing.T) {
+	for _, text := range []string{"a: {grid-rows: 4\nb}", "a.grid-rows: 4\na.b"} {
+		out, err := Set(text, "a", "grid-rows", nil)
+		if err != nil || strings.Contains(out, "grid") {
+			t.Fatalf("%q: %q %v", text, out, err)
+		}
+	}
+}
+
+func TestDeleteContainer(t *testing.T) {
+	const text = "x -> a.b\na: {b: {c}\nd}\na.e"
+
+	out, err := Delete(text, "a", false)
+	if err != nil || strings.TrimSpace(out) != "x" {
+		t.Fatalf("cascade: %q %v", out, err)
+	}
+
+	out, err = Delete(text, "a", true)
+	if err != nil || !strings.Contains(out, "b") || !strings.Contains(out, "d") || strings.Contains(out, "a") {
+		t.Fatalf("keep: %q %v", out, err)
 	}
 }
 
@@ -159,10 +182,10 @@ func TestEditOnBrokenTextFails(t *testing.T) {
 	ops := map[string]func() error{
 		"create":    func() error { _, _, e := Create(bad, "", ""); return e },
 		"set":       func() error { _, e := Set(bad, "a", "shape", &s); return e },
-		"delete":    func() error { _, e := Delete(bad, "a"); return e },
+		"delete":    func() error { _, e := Delete(bad, "a", false); return e },
 		"move":      func() error { _, _, e := Move(bad, "a", "b"); return e },
 		"rename":    func() error { _, _, e := Rename(bad, "a", "b"); return e },
-		"connect":   func() error { _, _, e := Connect(bad, "a", "b"); return e },
+		"connect":   func() error { _, _, e := Connect(bad, "a", "b", "->"); return e },
 		"reconnect": func() error { _, e := Reconnect(bad, "(a -> b)[0]", &s, &s); return e },
 		"format":    func() error { _, e := Format(bad); return e },
 		"pin":       func() error { _, e := Pin(bad, "a", 1, 2); return e },
@@ -214,6 +237,14 @@ func TestSetReplacesIconAndNear(t *testing.T) {
 	out, err = Set("a.near: top-left", "a", "near", &n)
 	if err != nil || out != "a.near: top-right\n" {
 		t.Fatalf("near: %q %v", out, err)
+	}
+
+	// The oracle writes the new value into the earlier "c" map, the old flat key must go.
+	b := "b"
+
+	out, err = Set("a\nb\nc\nc.near: a", "c", "near", &b)
+	if err != nil || strings.Count(out, "near") != 1 || !strings.Contains(out, "near: b") {
+		t.Fatalf("near object: %q %v", out, err)
 	}
 }
 
