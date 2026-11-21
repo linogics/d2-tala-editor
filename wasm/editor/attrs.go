@@ -9,7 +9,12 @@ import (
 
 // attrs returns the D2 attributes set on a shape or edge, keyed by their D2 path.
 func attrs(a *d2graph.Attributes) map[string]string {
-	m := map[string]string{"label": a.Label.Value}
+	m := map[string]string{}
+	// Without a written label D2 shows the id, the UI shows that as a placeholder.
+	if labelKey(a.Label) != nil {
+		m["label"] = a.Label.Value
+	}
+
 	s := a.Style
 
 	for k, v := range map[string]*d2graph.Scalar{

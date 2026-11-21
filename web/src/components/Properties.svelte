@@ -114,7 +114,7 @@
           {#if shape}
             <label>Id <input value={sel!.id.split('.').pop()} onchange={rename} /></label>
           {/if}
-          <label>Label <textarea rows="1" value={attrs.label ?? ''} onkeydown={enterCommits} onchange={(e) => set('label', e)}></textarea></label>
+          <label>Label <textarea rows="1" value={attrs.label ?? ''} placeholder={shape && !many.length ? shape.id.split('.').pop() : ''} onkeydown={enterCommits} onchange={(e) => set('label', e)}></textarea></label>
         {/if}
         {#if shape}
           <label>
