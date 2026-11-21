@@ -2,7 +2,7 @@
   import type { AppState } from '../lib/state.svelte'
   import type { ThemeInfo } from '../lib/protocol'
   import { themeIdOf, withTheme } from '../lib/theme'
-  import { setMode } from '../lib/mode'
+  import { currentMode, currentPref, setMode, type ModePref } from '../lib/mode'
 
   let { app, examples }: { app: AppState; examples: { name: string; code: string }[] } = $props()
 
@@ -11,10 +11,14 @@
 
   const themeId = $derived(themeIdOf(app.code))
 
-  const mode = $derived(app.mode)
+  // Cycles system, light, dark. The label names what a click switches to.
+  const next: Record<ModePref, ModePref> = { system: 'light', light: 'dark', dark: 'system' }
+  const modeLabel: Record<ModePref, string> = { system: 'Match system', light: 'Light mode', dark: 'Dark mode' }
+  let pref = $state(currentPref())
   function toggleMode() {
-    app.mode = mode === 'dark' ? 'light' : 'dark'
-    setMode(app.mode)
+    pref = next[pref]
+    setMode(pref)
+    app.mode = currentMode()
   }
 
   const sketch = $derived(!!app.render?.config?.sketch)
@@ -36,7 +40,8 @@
     a.href = URL.createObjectURL(new Blob([text], { type }))
     a.download = name
     a.click()
-    URL.revokeObjectURL(a.href)
+    // Revoking in the same task can cancel the download in Firefox and Safari.
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000)
   }
 
   async function exportSvg() {
@@ -82,7 +87,7 @@
       <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 3v8a6 6 0 0 0 12 0V3h-4v8a2 2 0 0 1-4 0V3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" /><path d="M6 7h4M14 7h4" stroke="currentColor" stroke-width="1.8" /></svg>
     </button>
     <input
-      class="grid"
+      class="grid mono"
       type="number"
       min="2"
       aria-label="Grid size"
@@ -96,8 +101,7 @@
     />
   </div>
 
-  <div class="status">
-    {#if app.busy}<span class="badge">Working…</span>{/if}
+  <div class="status" role="status" aria-live="polite">
     {#if app.notice}<span class="notice">{app.notice}</span>{/if}
   </div>
 
@@ -106,8 +110,10 @@
     <button class="primary" title="Export .svg" onclick={exportSvg}>{@render dl()} .svg</button>
   </div>
 
-  <button class="icon" title={mode === 'dark' ? 'Light mode' : 'Dark mode'} aria-label={mode === 'dark' ? 'Light mode' : 'Dark mode'} onclick={toggleMode}>
-    {#if mode === 'dark'}
+  <button class="icon" title="{modeLabel[pref]} (click for {modeLabel[next[pref]].toLowerCase()})" aria-label="Color mode: {modeLabel[pref]}" onclick={toggleMode}>
+    {#if pref === 'system'}
+      <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2" /><path d="M8 20h8M12 16v4" /></g></svg>
+    {:else if pref === 'light'}
       <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></g></svg>
     {:else}
       <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" /></svg>
@@ -136,6 +142,7 @@
     border-bottom: 1px solid var(--border);
   }
   .brand {
+    font-family: var(--mono);
     font-size: 15px;
     font-weight: 700;
     letter-spacing: -0.01em;
@@ -146,7 +153,6 @@
   .group + .group { padding-left: 12px; border-left: 1px solid var(--border); }
   .status { flex: 1; display: flex; justify-content: flex-end; gap: 8px; min-width: 0; }
   .notice { color: var(--danger); background: var(--danger-bg); padding: 3px 10px; border-radius: 999px; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .badge { color: var(--warn-fg); background: var(--warn-bg); padding: 3px 10px; border-radius: 999px; font-size: 12px; }
   .grid { width: 4.5em; }
   a, .ver { color: var(--muted); font-size: 12px; }
   a:hover { color: var(--text); }

@@ -170,6 +170,12 @@ var handlers = map[string]handler{
 		return list(Completions(a.Text, a.Line, a.Col))
 	}),
 	"refRanges": op(func(a idArgs) (any, error) { return list(RefRanges(a.Text, a.ID)) }),
+	"refRangesAll": op(func(a struct {
+		Text string
+		IDs  []string
+	}) (any, error) {
+		return RefRangesAll(a.Text, a.IDs)
+	}),
 	"setKey": op(func(a struct {
 		Text  string
 		Path  []string

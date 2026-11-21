@@ -30,15 +30,37 @@
     }
   })
 
+  // Zooms to k and keeps the box point (cx, cy) still. Defaults to the box center.
+  function zoomTo(k: number, cx = box.clientWidth / 2, cy = box.clientHeight / 2) {
+    k = Math.min(8, Math.max(0.1, k))
+    view = { x: cx - ((cx - view.x) * k) / view.k, y: cy - ((cy - view.y) * k) / view.k, k }
+  }
+
+  // Centers the diagram in the box, scaled down to fit but never above 100%.
+  function fit() {
+    if (!size.w || !size.h) return
+    const pad = 32
+    const w = box.clientWidth
+    const h = box.clientHeight
+    const k = Math.min(1, Math.max(0.1, Math.min((w - 2 * pad) / size.w, (h - 2 * pad) / size.h)))
+    view = { x: (w - size.w * k) / 2, y: (h - size.h * k) / 2, k }
+  }
+
+  // The first diagram opens fitted, later renders keep the view the user set.
+  let fitted = false
+  $effect(() => {
+    if (vb && !fitted) {
+      fitted = true
+      fit()
+    }
+  })
+
   $effect(() => {
     const el = box
     const onWheel = (e: WheelEvent) => {
       e.preventDefault()
       const r = el.getBoundingClientRect()
-      const cx = e.clientX - r.left
-      const cy = e.clientY - r.top
-      const k = Math.min(8, Math.max(0.1, view.k * Math.exp(-e.deltaY * 0.002)))
-      view = { x: cx - ((cx - view.x) * k) / view.k, y: cy - ((cy - view.y) * k) / view.k, k }
+      zoomTo(view.k * Math.exp(-e.deltaY * 0.002), e.clientX - r.left, e.clientY - r.top)
     }
     el.addEventListener('wheel', onWheel, { passive: false })
 
@@ -262,11 +284,25 @@
       return
     }
     if (e.key === 'Escape') return app.select(null)
-    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'a') {
+    const mod = e.ctrlKey || e.metaKey
+    if (mod && e.key.toLowerCase() === 'a') {
       e.preventDefault()
 
       return app.selectShapes(shapes.map((s) => s.id))
     }
+    // The code editor holds the history, so canvas undo goes through it.
+    if (mod && (e.key.toLowerCase() === 'y' || (e.key.toLowerCase() === 'z' && e.shiftKey))) {
+      e.preventDefault()
+
+      return app.redo()
+    }
+    if (mod && e.key.toLowerCase() === 'z') {
+      e.preventDefault()
+
+      return app.undo()
+    }
+    if (!mod && !e.altKey && e.key === '0') return fit()
+    if (!mod && !e.altKey && e.key === '1') return zoomTo(1)
     const st = steps[e.key]
     if (!st || drag || e.ctrlKey || e.metaKey || e.altKey) return
     const group = movers(shapes, selIds)
@@ -369,9 +405,21 @@
     <div class="axis v"></div>
     <div class="axis h"></div>
   {/if}
-  {#if app.busy}<div class="badge">Laying out…</div>{/if}
+  <!-- Controls sit on the canvas, so a press on them must not start a canvas drag. -->
+  <div class="zoom" role="group" aria-label="Zoom" onpointerdown={(e) => e.stopPropagation()}>
+    <button class="icon" title="Fit diagram (0)" aria-label="Fit diagram" onclick={fit}>
+      <svg viewBox="0 0 24 24" width="15" height="15" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" /></svg>
+    </button>
+    <button class="pct" title="Zoom to 100% (1)" aria-label="Zoom {Math.round(view.k * 100)}%, reset to 100%" onclick={() => zoomTo(1)}>{Math.round(view.k * 100)}%</button>
+  </div>
+  {#if app.busy}<div class="badge" role="status">Laying out…</div>{/if}
   {#if app.errors.length}
-    <div class="banner">Line {app.errors[0].line + 1}: {app.errors[0].message}</div>
+    {@const err = app.errors[0]}
+    <div role="alert">
+      <button class="banner" title="Show in code" onpointerdown={(e) => e.stopPropagation()} onclick={() => app.reveal(err.line, err.col)}>
+        Line {err.line + 1}: {err.message.replace(/^\d+:\d+:\s*/, '')}{#if app.errors.length > 1}<span class="more">+{app.errors.length - 1} more</span>{/if}
+      </button>
+    </div>
   {/if}
 </div>
 
@@ -410,6 +458,11 @@
   .marker { stroke: var(--primary); stroke-width: 3; pointer-events: none; }
   .marquee { fill: var(--secondary-soft); stroke: var(--secondary); pointer-events: none; }
   .ghost { fill: var(--secondary-soft); stroke: var(--secondary); stroke-dasharray: 4 3; stroke-width: 2; pointer-events: none; }
-  .badge { position: absolute; top: 10px; right: 10px; padding: 3px 10px; background: var(--warn-bg); color: var(--warn-fg); border-radius: 999px; font-size: 12px; box-shadow: var(--shadow); }
-  .banner { position: absolute; left: 10px; right: 10px; top: 10px; padding: 8px 12px; background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); border-radius: var(--radius); box-shadow: var(--shadow); font-family: var(--mono); font-size: 12px; }
+  .zoom { position: absolute; left: 10px; bottom: 10px; display: flex; gap: 4px; }
+  .zoom button { background: var(--surface); box-shadow: var(--shadow); }
+  .pct { min-width: 4.5em; justify-content: center; font-family: var(--mono); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .badge { position: absolute; bottom: 10px; right: 10px; padding: 3px 10px; background: var(--warn-bg); color: var(--warn-fg); border-radius: 999px; font-size: 12px; box-shadow: var(--shadow); }
+  .banner { position: absolute; left: 10px; right: 10px; top: 10px; display: flex; justify-content: space-between; gap: 12px; text-align: left; padding: 8px 12px; background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); border-radius: var(--radius); box-shadow: var(--shadow); font-family: var(--mono); font-size: 12px; }
+  .banner:hover { border-color: var(--danger); text-decoration: underline; }
+  .more { flex: none; opacity: 0.8; }
 </style>

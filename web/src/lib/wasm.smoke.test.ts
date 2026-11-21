@@ -20,6 +20,11 @@ describe.skipIf(!existsSync(wasm))('real wasm (skipped: web/public/editor.wasm m
     expect(r.ok).toBe(true)
     expect(r.result.shapes).toHaveLength(2)
 
+    const refs = JSON.parse(g.d2editor.call('refRangesAll', JSON.stringify({ text: 'a -> b', ids: ['a', 'zzz'] })))
+    expect(refs.ok).toBe(true)
+    expect(refs.result.a).toHaveLength(1)
+    expect(refs.result.zzz).toEqual([])
+
     const bad = JSON.parse(g.d2editor.call('nope', '{}'))
     expect(bad.ok).toBe(false)
     expect(bad.error.code).toBe('unknown_op')

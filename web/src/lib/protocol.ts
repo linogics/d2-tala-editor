@@ -96,6 +96,8 @@ export interface Ops {
   format: { args: T; result: T }
   completions: { args: T & { line: number; col: number }; result: CompletionItem[] }
   refRanges: { args: Id; result: Range[] }
+  // One compile for many ids. Unknown ids map to an empty list.
+  refRangesAll: { args: T & { ids: string[] }; result: Record<string, Range[]> }
   // Sets the scalar at a vars or classes path, null deletes it, "" writes a bare key.
   setKey: { args: T & { path: string[]; value: string | null }; result: T }
   renameClass: { args: T & { from: string; to: string }; result: T }

@@ -3,7 +3,7 @@
   import { basicSetup } from 'codemirror'
   import { EditorState, StateEffect, StateField, Transaction } from '@codemirror/state'
   import { Decoration, EditorView, type DecorationSet } from '@codemirror/view'
-  import { isolateHistory } from '@codemirror/commands'
+  import { isolateHistory, redo, undo } from '@codemirror/commands'
   import { autocompletion, type CompletionContext } from '@codemirror/autocomplete'
   import { setDiagnostics } from '@codemirror/lint'
   import type { AppState } from '../lib/state.svelte'
@@ -82,18 +82,16 @@
   // Click inside the refs of a shape selects it. The innermost (shortest) range wins.
   async function selectAt(at: number) {
     const text = view.state.doc.toString()
+    const ids = (state.render?.shapes ?? []).map((sh) => sh.id)
+    const all = await state.engine.call('refRangesAll', { ids, text }).catch(() => ({}) as Record<string, Range[]>)
     const hits: { id: string; len: number }[] = []
-
-    await Promise.all(
-      (state.render?.shapes ?? []).map(async (sh) => {
-        const ranges = await state.engine.call('refRanges', { id: sh.id, text }).catch(() => [] as Range[])
-        for (const r of ranges) {
-          const from = pos(view.state.doc, r.fromLine, r.fromCol)
-          const to = pos(view.state.doc, r.toLine, r.toCol)
-          if (at >= from && at <= to) hits.push({ id: sh.id, len: to - from })
-        }
-      }),
-    )
+    for (const [id, ranges] of Object.entries(all)) {
+      for (const r of ranges) {
+        const from = pos(view.state.doc, r.fromLine, r.fromCol)
+        const to = pos(view.state.doc, r.toLine, r.toCol)
+        if (at >= from && at <= to) hits.push({ id, len: to - from })
+      }
+    }
     const best = hits.sort((a, b) => a.len - b.len)[0]
     if (best) state.select({ kind: 'shape', id: best.id })
   }
@@ -126,6 +124,16 @@
       }),
     )
 
+    state.registerEditor({
+      undo: () => undo(view),
+      redo: () => redo(view),
+      reveal(line, col) {
+        const at = pos(view.state.doc, line, col)
+        view.dispatch({ selection: { anchor: at }, effects: EditorView.scrollIntoView(at, { y: 'center' }) })
+        view.focus()
+      },
+    })
+
     return () => view.destroy()
   })
 
@@ -143,8 +151,9 @@
     const sel = state.selection
     const text = state.code
     if (!sel.length) return void view.dispatch({ effects: setRefs.of(Decoration.none) })
-    Promise.all(sel.map((x) => state.engine.call('refRanges', { id: x.id, text })))
-      .then((all) => all.flat())
+    state.engine
+      .call('refRangesAll', { ids: sel.map((x) => x.id), text })
+      .then((all) => Object.values(all).flat())
       .then((ranges) => {
         const doc = view.state.doc
         const marks = ranges

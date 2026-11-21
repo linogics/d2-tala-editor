@@ -33,7 +33,7 @@ AppState ── engine.call(op, args) ──────▶ worker.ts
 | `pin`, `unpin`, `pinAll` | Write or remove `top` and `left` |
 | `reorder`, `reorderEdge` | Move a declaration or a sequence message before another |
 | `renameClass` | Rename a class and its uses |
-| `format`, `completions`, `refRanges` | Code editor support |
+| `format`, `completions`, `refRanges`, `refRangesAll` | Code editor support |
 | `themes` | Theme list with colors |
 
 ## Worker (`web/src/lib/worker.ts`)
