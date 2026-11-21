@@ -4,9 +4,13 @@ import (
 	"strings"
 	"unicode/utf16"
 
+	"github.com/d2lang/d2/d2ast"
+	"github.com/d2lang/d2/d2ir"
 	"github.com/d2lang/d2/d2lsp"
+	"github.com/d2lang/d2/d2parser"
 	"github.com/d2lang/d2/d2themes"
 	"github.com/d2lang/d2/d2themes/d2themescatalog"
+	"github.com/d2lang/d2/lib/memfs"
 )
 
 // CompletionItem is d2lsp's completion item.
@@ -33,26 +37,97 @@ func Completions(text string, line, col int) ([]CompletionItem, error) {
 }
 
 func RefRanges(text, id string) ([]Range, error) {
-	rs, _, err := d2lsp.GetRefRanges("index.d2", map[string]string{"index.d2": text}, nil, id)
+	all, err := RefRangesAll(text, []string{id})
+
+	return all[id], err
+}
+
+// RefRangesAll compiles the text once and returns the ref ranges of every id.
+// An id that is not found maps to an empty list.
+func RefRangesAll(text string, ids []string) (map[string][]Range, error) {
+	ast, err := d2parser.Parse("index.d2", strings.NewReader(text), nil)
 	if err != nil {
 		return nil, err
 	}
 
-	// GetRefRanges reports byte columns, so convert them to UTF-16.
+	fs, err := memfs.New(map[string]string{"index.d2": text})
+	if err != nil {
+		return nil, err
+	}
+
+	root, _, err := d2ir.Compile(ast, &d2ir.CompileOptions{FS: fs})
+	if err != nil {
+		return nil, err
+	}
+
+	// d2ast reports byte columns, so convert them to UTF-16.
 	lines := strings.Split(text, "\n")
 	col := func(line, c int) int {
 		return len(utf16.Encode([]rune(lines[line][:c])))
 	}
 
-	out := make([]Range, 0, len(rs))
-	for _, r := range rs {
-		out = append(out, Range{
-			r.Start.Line, col(r.Start.Line, r.Start.Column),
-			r.End.Line, col(r.End.Line, r.End.Column),
-		})
+	out := make(map[string][]Range, len(ids))
+	for _, id := range ids {
+		rs := []Range{}
+		for _, r := range refsOf(root, id) {
+			rs = append(rs, Range{
+				r.Start.Line, col(r.Start.Line, r.Start.Column),
+				r.End.Line, col(r.End.Line, r.End.Column),
+			})
+		}
+
+		out[id] = rs
 	}
 
 	return out, nil
+}
+
+// refsOf mirrors d2lsp.GetRefRanges on an already compiled map.
+func refsOf(m *d2ir.Map, key string) []d2ast.Range {
+	mk, err := d2parser.ParseMapKey(key)
+	if err != nil || (mk.Key == nil && len(mk.Edges) == 0) {
+		return nil
+	}
+
+	var f *d2ir.Field
+
+	if mk.Key != nil {
+		for _, p := range mk.Key.Path {
+			if m == nil {
+				return nil
+			}
+
+			if f = m.GetField(p.Unbox()); f == nil {
+				return nil
+			}
+
+			m = f.Map()
+		}
+	}
+
+	var out []d2ast.Range
+
+	if len(mk.Edges) > 0 {
+		if m == nil {
+			return nil
+		}
+
+		for _, eid := range d2ir.NewEdgeIDs(mk) {
+			for _, e := range m.GetEdges(eid, nil, nil) {
+				for _, ref := range e.References {
+					out = append(out, ref.AST().GetRange())
+				}
+			}
+		}
+
+		return out
+	}
+
+	for _, ref := range f.References {
+		out = append(out, ref.AST().GetRange())
+	}
+
+	return out
 }
 
 func Themes() []ThemeInfo {

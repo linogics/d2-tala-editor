@@ -49,3 +49,20 @@ func TestThemesHasDefault(t *testing.T) {
 		t.Fatal("missing default or dark theme")
 	}
 }
+
+func TestRefRangesAllOneCompile(t *testing.T) {
+	text := "a -> b\nc: {d}\n(a -> b)[0].style.stroke: red"
+
+	all, err := RefRangesAll(text, []string{"a", "c.d", "(a -> b)[0]", "zzz"})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(all["a"]) != 2 || len(all["c.d"]) != 1 || len(all["(a -> b)[0]"]) == 0 {
+		t.Fatalf("ranges %v", all)
+	}
+
+	if rs, ok := all["zzz"]; !ok || len(rs) != 0 {
+		t.Fatalf("unknown id %v", all["zzz"])
+	}
+}
