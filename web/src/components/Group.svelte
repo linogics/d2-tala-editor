@@ -13,6 +13,6 @@
 
 <style>
   .group { margin-bottom: 12px; }
-  summary { cursor: pointer; margin-bottom: 6px; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  summary { cursor: pointer; margin-bottom: 6px; font-size: 12px; font-weight: 600; color: var(--muted); }
   .box { border: 1px solid var(--border); border-radius: 6px; padding: 8px 8px 0; }
 </style>

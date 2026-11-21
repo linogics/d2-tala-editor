@@ -112,7 +112,7 @@
           <p>{many.length} shapes selected</p>
         {:else}
           {#if shape}
-            <label>Id <input value={sel!.id.split('.').pop()} onchange={rename} /></label>
+            <label>Id <input class="mono" value={sel!.id.split('.').pop()} onchange={rename} /></label>
           {/if}
           <label>Label <textarea rows="1" value={attrs.label ?? ''} placeholder={shape && !many.length ? shape.id.split('.').pop() : ''} onkeydown={enterCommits} onchange={(e) => set('label', e)}></textarea></label>
         {/if}
@@ -129,7 +129,7 @@
         <div class="classes" role="group" aria-label="Classes">
           <span class="lbl">Classes</span>
           {#each assigned as c (c)}
-            <span class="chip">{c}<button aria-label="Remove class {c}" onclick={() => setClasses(assigned.filter((x) => x !== c))}>×</button></span>
+            <span class="chip mono">{c}<button aria-label="Remove class {c}" onclick={() => setClasses(assigned.filter((x) => x !== c))}>×</button></span>
           {/each}
           {#if available.length}
             <select aria-label="Add class" value="" onchange={(e) => setClasses([...assigned, e.currentTarget.value])}>

@@ -8,6 +8,12 @@ export interface Selection {
   id: string
 }
 
+export interface EditorHooks {
+  undo(): void
+  redo(): void
+  reveal(line: number, col: number): void
+}
+
 // One canvas edit of a group action, the text is filled in by applyEdits.
 export type Step = { [O in Op]: [O, Omit<ArgsOf<O>, 'text'>] }[Op]
 
@@ -27,6 +33,8 @@ export function createAppState(engine: Engine) {
     mode: 'light' as Mode,
   })
   let sink: (text: string) => void = () => {}
+  // The code editor owns history and the cursor, other panes reach them through these.
+  let editor: EditorHooks = { undo() {}, redo() {}, reveal() {} }
 
   const loop = createRenderLoop(
     engine,
@@ -87,6 +95,13 @@ export function createAppState(engine: Engine) {
     registerCodeSink(fn: (text: string) => void) {
       sink = fn
     },
+    registerEditor(hooks: EditorHooks) {
+      editor = hooks
+    },
+    undo: () => editor.undo(),
+    redo: () => editor.redo(),
+    // Moves the code cursor to a 0-based line and column and focuses the editor.
+    reveal: (line: number, col: number) => editor.reveal(line, col),
     select(sel: Selection | null) {
       s.selection = sel ? [sel] : []
     },

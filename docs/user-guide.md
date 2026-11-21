@@ -1,6 +1,6 @@
 # User guide
 
-The editor has four areas: the palette on the left, the canvas in the middle, the code on the right and a side panel with the tabs Properties, Classes and Theme. The top bar holds the theme picker, sketch toggle, examples, grid settings, export buttons, the light/dark switch and links to this guide, the licenses and the GitHub repository.
+The editor has four areas: the palette on the left, the canvas in the middle, the code on the right and a side panel with the tabs Properties, Classes and Theme. The top bar holds the theme picker, sketch toggle, examples, grid settings, export buttons, the color mode switch (system, light, dark) and links to this guide, the licenses and the GitHub repository.
 
 Drag the border on the left of the side panel or of the code pane to resize it. Double click a border to reset its width. Widths are saved in the browser. A focused border also moves with the left and right arrow keys.
 
@@ -9,8 +9,8 @@ Drag the border on the left of the side panel or of the code pane to resize it. 
 The code is the source of truth. Every canvas action becomes a small edit of the D2 text, and every text change triggers a new render.
 
 - While you type, the editor renders a fast preview with one TALA seed. When you stop typing for about 1.5 seconds it renders the full layout.
-- If the code has an error, the error is shown inline and the last good diagram stays on the canvas. Canvas edits are blocked until the error is fixed ("Fix the code error first").
-- Undo and redo work in the code editor (`Ctrl+Z`, `Ctrl+Shift+Z`). A canvas action, including a group action on many shapes, is one undo step.
+- If the code has an error, the error is shown inline and the last good diagram stays on the canvas. The banner on the canvas names the first error and how many more there are. Click it to jump to the line in the code. Canvas edits are blocked until the error is fixed ("Fix the code error first").
+- Undo and redo work in the code editor and on the canvas (`Ctrl+Z`, `Ctrl+Shift+Z` or `Ctrl+Y`). A canvas action, including a group action on many shapes, is one undo step.
 - Your code is saved in the browser's local storage and comes back on reload.
 
 ## Adding shapes
@@ -71,6 +71,11 @@ Selected shapes are highlighted in the code too.
 | `Alt` + drag the connect handle | Connect with a plain line `--` |
 | `Space` + drag, or middle mouse drag | Pan |
 | Mouse wheel | Zoom at the cursor |
+| `0` | Fit the diagram into the canvas |
+| `1` | Zoom to 100% |
+| `Ctrl+Z`, `Ctrl+Shift+Z` or `Ctrl+Y` | Undo, redo |
+
+The buttons in the lower left corner of the canvas do the same as `0` and `1` and show the zoom. The first diagram opens fitted.
 
 A burst of arrow key presses is pinned as one edit once you pause.
 

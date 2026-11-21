@@ -55,7 +55,7 @@
   {#if classes.length}
     <div class="list" role="listbox" aria-label="Classes">
       {#each classes as c (c.name)}
-        <button role="option" aria-selected={c === cls} class:on={c === cls} onclick={() => (picked = c.name)}>{c.name}</button>
+        <button class="mono" role="option" aria-selected={c === cls} class:on={c === cls} onclick={() => (picked = c.name)}>{c.name}</button>
       {/each}
     </div>
   {:else}
@@ -78,7 +78,7 @@
           </Group>
         {:else}
           <Group name={g}>
-            {#if g === 'General'}<label>Name <input value={cls.name} onchange={rename} /></label>{/if}
+            {#if g === 'General'}<label>Name <input class="mono" value={cls.name} onchange={rename} /></label>{/if}
             {#each classFields.filter((x) => x.group === g) as fd (fd.attr)}{@render input(fd)}{/each}
           </Group>
         {/if}
