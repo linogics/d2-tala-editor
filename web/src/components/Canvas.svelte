@@ -393,7 +393,7 @@
     background-size: var(--g) var(--g);
     background-position: var(--gx) var(--gy);
   }
-  .axis { position: absolute; pointer-events: none; border: 0 dashed var(--secondary); opacity: 0.5; }
+  .axis { position: absolute; pointer-events: none; border: 0 solid var(--secondary); }
   .axis.v { top: 0; bottom: 0; left: var(--gx); border-left-width: 1px; }
   .axis.h { left: 0; right: 0; top: var(--gy); border-top-width: 1px; }
   .gridfill { fill: url(#grid); pointer-events: none; }
