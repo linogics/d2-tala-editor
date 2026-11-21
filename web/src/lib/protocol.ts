@@ -81,7 +81,7 @@ export interface Ops {
   create: { args: T & { parent: string; shape: string }; result: Id }
   insert: { args: T & { parent: string; template: string }; result: Id }
   set: { args: Id & { attr: string; value: string | null }; result: T }
-  delete: { args: Id; result: T }
+  delete: { args: Id & { keepChildren?: boolean }; result: T }
   move: { args: Id & { parent: string }; result: Id }
   rename: { args: Id & { name: string }; result: Id }
   connect: { args: T & { src: string; dst: string; op?: '->' | '<-' | '<->' | '--' }; result: Id }

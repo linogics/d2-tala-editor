@@ -66,7 +66,8 @@ Selected shapes are highlighted in the code too.
 |-----|--------|
 | Arrow keys | Nudge the selected shapes by 1 px |
 | `Shift` + arrow keys | Nudge by one grid step |
-| `Delete` | Delete the selection |
+| `Delete` | Delete the selection, containers with everything inside |
+| `Shift+Delete` | Delete the selection, children of a container move up a level |
 | `Alt` + drag the connect handle | Connect with a plain line `--` |
 | `Space` + drag, or middle mouse drag | Pan |
 | Mouse wheel | Zoom at the cursor |
@@ -79,7 +80,7 @@ Shows the fields of the selected shape or edge: label, shape type, style (fill, 
 
 Fields sit in titled groups: General, Arrows, Position, Fill, Stroke, Font, Effects and Extras. Click a title to fold its group. Folds are kept per group name in the browser and apply to the Classes panel too.
 
-With several shapes selected, a field shows a value only when all of them agree, and setting it writes it on every shape. Deleting a container deletes its children.
+With several shapes selected, a field shows a value only when all of them agree, and setting it writes it on every shape. Deleting a container deletes its children, Shift keeps them.
 
 With nothing selected, "Pin all" writes `top` and `left` for every shape that can be pinned, freezing the current layout.
 

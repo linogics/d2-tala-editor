@@ -73,22 +73,20 @@
     app.applyEdit(on ? 'pin' : 'unpin', { id: shape!.id, x: Math.round(shape!.x), y: Math.round(shape!.y) } as never)
   }
 
-  async function del() {
-    if (ids.length === 1) {
-      if (await app.applyEdit('delete', { id: ids[0] })) app.select(null)
-
-      return
-    }
-    // Deepest first, deleting a container first would lift its selected children out of it.
-    const order = [...ids].sort((a, b) => b.split('.').length - a.split('.').length)
-    if (await app.applyEdits(order.map((id) => ['delete', { id }]))) app.select(null)
+  // A container goes with everything inside it. keep (Shift) lifts its children out instead.
+  async function del(keep = false) {
+    // Deepest first, so with keep a deleted container does not lift its selected children out.
+    const order = keep
+      ? [...ids].sort((a, b) => b.split('.').length - a.split('.').length)
+      : ids.filter((id) => !ids.some((p) => id.startsWith(p + '.')))
+    if (await app.applyEdits(order.map((id) => ['delete', { id, keepChildren: keep }]))) app.select(null)
   }
 
   function key(e: KeyboardEvent) {
     if (e.key !== 'Delete' || !ids.length) return
     const t = e.target as HTMLElement
     if (t.closest?.('input, textarea, select, .cm-editor') || t.isContentEditable) return
-    del()
+    del(e.shiftKey)
   }
 </script>
 
@@ -163,7 +161,7 @@
           {/each}
         </Group>
       {/each}
-      <button class="danger" onclick={del}>Delete</button>
+      <button class="danger" title="Shift keeps the children" onclick={(e) => del(e.shiftKey)}>Delete</button>
     {/key}
   {/if}
 </div>

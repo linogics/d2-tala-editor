@@ -109,7 +109,12 @@ var handlers = map[string]handler{
 	}) (any, error) {
 		return textRes(Set(a.Text, a.ID, a.Attr, a.Value))
 	}),
-	"delete": op(func(a idArgs) (any, error) { return textRes(Delete(a.Text, a.ID)) }),
+	"delete": op(func(a struct {
+		Text, ID     string
+		KeepChildren bool
+	}) (any, error) {
+		return textRes(Delete(a.Text, a.ID, a.KeepChildren))
+	}),
 	"move": op(func(a struct{ Text, ID, Parent string }) (any, error) {
 		t, id, err := Move(a.Text, a.ID, a.Parent)
 

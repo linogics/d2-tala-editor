@@ -292,8 +292,27 @@ func clearClass(text, id string) (string, error) {
 	})
 }
 
-func Delete(text, id string) (string, error) {
+// Delete removes id. Without keepChildren its descendants go too, deepest first,
+// since the oracle lifts the children of a deleted container into its parent.
+func Delete(text, id string, keepChildren bool) (string, error) {
 	return edit(text, func(g *d2graph.Graph) (*d2graph.Graph, error) {
+		if !keepChildren {
+			var kids []string
+			for _, o := range g.Objects {
+				if strings.HasPrefix(o.AbsID(), id+".") {
+					kids = append(kids, o.AbsID())
+				}
+			}
+			slices.SortFunc(kids, func(a, b string) int { return strings.Count(b, ".") - strings.Count(a, ".") })
+
+			for _, k := range kids {
+				var err error
+				if g, err = d2oracle.Delete(g, nil, k); err != nil {
+					return nil, err
+				}
+			}
+		}
+
 		return d2oracle.Delete(g, nil, id)
 	})
 }

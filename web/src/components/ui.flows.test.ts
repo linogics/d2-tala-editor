@@ -201,6 +201,24 @@ describe.skipIf(!existsSync(wasm))('ui flows (skipped: web/public/editor.wasm mi
     })
   })
 
+  describe('containers', () => {
+    it('deletes a container with its children, Shift keeps them', async () => {
+      for (const [shift, want] of [[false, ['x']], [true, ['b', 'x']]] as const) {
+        open(Properties, 'x -> a.b\na: {b}')
+        app.select({ kind: 'shape', id: 'a' })
+        flushSync()
+        button('Delete')!.dispatchEvent(new MouseEvent('click', { bubbles: true, shiftKey: shift }))
+        for (let i = 0; i < 4; i++) await tick()
+        ok(`shift=${shift}`)
+        expect(refresh().shapes.map((s) => s.id).sort()).toEqual(want)
+        unmount(comp!)
+        comp = null
+        host.remove()
+        app.dispose()
+      }
+    })
+  })
+
   describe('classes panel', () => {
     async function add(name: string) {
       return change(label('New class')?.querySelector('input'), name)

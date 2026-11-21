@@ -145,9 +145,23 @@ func TestConnectAndReconnect(t *testing.T) {
 }
 
 func TestDeleteRemovesEdges(t *testing.T) {
-	out, err := Delete("a -> b\nb -> c", "b")
+	out, err := Delete("a -> b\nb -> c", "b", false)
 	if err != nil || strings.Contains(out, "->") {
 		t.Fatalf("%q %v", out, err)
+	}
+}
+
+func TestDeleteContainer(t *testing.T) {
+	const text = "x -> a.b\na: {b: {c}\nd}\na.e"
+
+	out, err := Delete(text, "a", false)
+	if err != nil || strings.TrimSpace(out) != "x" {
+		t.Fatalf("cascade: %q %v", out, err)
+	}
+
+	out, err = Delete(text, "a", true)
+	if err != nil || !strings.Contains(out, "b") || !strings.Contains(out, "d") || strings.Contains(out, "a") {
+		t.Fatalf("keep: %q %v", out, err)
 	}
 }
 
@@ -159,7 +173,7 @@ func TestEditOnBrokenTextFails(t *testing.T) {
 	ops := map[string]func() error{
 		"create":    func() error { _, _, e := Create(bad, "", ""); return e },
 		"set":       func() error { _, e := Set(bad, "a", "shape", &s); return e },
-		"delete":    func() error { _, e := Delete(bad, "a"); return e },
+		"delete":    func() error { _, e := Delete(bad, "a", false); return e },
 		"move":      func() error { _, _, e := Move(bad, "a", "b"); return e },
 		"rename":    func() error { _, _, e := Rename(bad, "a", "b"); return e },
 		"connect":   func() error { _, _, e := Connect(bad, "a", "b", "->"); return e },
