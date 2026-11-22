@@ -91,6 +91,6 @@
 <style>
   p { color: var(--muted); margin: 0 0 12px; }
   .list { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px; }
-  .list button { padding: 2px 8px; font-size: 12px; }
+  .list button { padding: 2px 8px; font-size: 0.8125rem; }
   .danger { margin-top: 8px; }
 </style>

@@ -29,8 +29,8 @@
   --syn-operator: light-dark(#0087a8, #2cc3e8);
   --shadow: 0 1px 2px light-dark(#1a1f2b14, #0006), 0 4px 12px light-dark(#1a1f2b0d, #0004);
   --radius: 8px;
-  /* Chrome reads as prose, so it uses the system face. Code, ids and the brand stay mono. */
-  --font: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  /* Chrome reads as prose, so it uses Sora. Code, ids and the brand stay mono. */
+  --font: 'Sora Variable', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --mono: 'JetBrains Mono Variable', ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
 }
 :root[data-mode='light'] { color-scheme: light; }
@@ -40,7 +40,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font: 13px/1.45 var(--font);
+  font: 0.875rem/1.45 var(--font);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -83,7 +83,7 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
   height: 34px;
   padding: 0 12px;
   border-bottom: 1px solid var(--border);
-  font-size: 12px;
+  font-size: 0.8125rem;
   font-weight: 600;
   color: var(--muted);
   flex: none;
@@ -101,7 +101,7 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 
 /* Side panel forms: Properties, Classes, Theme. */
 .form { padding: 12px; overflow-y: auto; }
-.form label { display: block; margin-bottom: 10px; font-size: 12px; font-weight: 500; color: var(--muted); }
+.form label { display: block; margin-bottom: 10px; font-size: 0.8125rem; font-weight: 500; color: var(--muted); }
 .form label:has(> input[type='checkbox']) { display: flex; align-items: center; gap: 6px; color: var(--text); font-weight: 400; margin-bottom: 6px; }
 .form input:not([type='checkbox']), .form select, .form textarea { display: block; width: 100%; box-sizing: border-box; margin-top: 4px; color: var(--text); }
 .form .color { display: flex; gap: 4px; }
@@ -109,6 +109,6 @@ button:focus-visible, select:focus-visible, textarea:focus-visible, input:focus-
 .form textarea { resize: none; field-sizing: content; }
 /* One arrow end, a box of its own. */
 .form .head { border: 1px solid var(--border); border-radius: 6px; padding: 8px 8px 0; margin-bottom: 10px; }
-.form .head > .end { display: block; margin-bottom: 6px; font-size: 12px; color: var(--muted); }
+.form .head > .end { display: block; margin-bottom: 6px; font-size: 0.8125rem; color: var(--muted); }
 .form .color input[type='color'] { width: 34px; flex: none; padding: 2px; }
 .mono { font-family: var(--mono); }

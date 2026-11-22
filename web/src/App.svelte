@@ -90,8 +90,8 @@
   .app { display: grid; grid-template-rows: auto 1fr; height: 100vh; }
   .cols { display: grid; min-height: 0; }
   .overlay { position: fixed; inset: 0; z-index: 10; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; }
-  .brand { font-family: var(--mono); font-size: 22px; font-weight: 700; color: var(--primary); }
+  .brand { font-family: var(--mono); font-size: 1.4375rem; font-weight: 700; color: var(--primary); }
   .track { width: 260px; height: 6px; border-radius: 999px; background: var(--surface-2); overflow: hidden; }
   .fill { height: 100%; background: var(--primary); transition: width 0.2s; }
-  .sub { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+  .sub { color: var(--muted); font-size: 0.8125rem; font-variant-numeric: tabular-nums; }
 </style>

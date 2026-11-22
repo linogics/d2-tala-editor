@@ -25,7 +25,7 @@
 <style>
   .box { display: flex; flex-direction: column; min-height: 0; background: var(--surface); border-right: 1px solid var(--border); }
   .tabs { gap: 4px; justify-content: flex-start; }
-  .tabs button { padding: 3px 8px; font-size: 12px; }
+  .tabs button { padding: 3px 8px; font-size: 0.8125rem; }
   .pane { flex: 1; min-height: 0; overflow-y: auto; }
   .pane[hidden] { display: none; }
 </style>
