@@ -143,7 +143,7 @@
   }
   .brand {
     font-family: var(--mono);
-    font-size: 15px;
+    font-size: 1rem;
     font-weight: 700;
     letter-spacing: -0.01em;
     color: var(--primary);
@@ -152,9 +152,9 @@
   .group { display: flex; align-items: center; gap: 6px; }
   .group + .group { padding-left: 12px; border-left: 1px solid var(--border); }
   .status { flex: 1; display: flex; justify-content: flex-end; gap: 8px; min-width: 0; }
-  .notice { color: var(--danger); background: var(--danger-bg); padding: 3px 10px; border-radius: 999px; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .notice { color: var(--danger); background: var(--danger-bg); padding: 3px 10px; border-radius: 999px; font-size: 0.8125rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .grid { width: 4.5em; }
-  a, .ver { color: var(--muted); font-size: 12px; }
+  a, .ver { color: var(--muted); font-size: 0.8125rem; }
   a:hover { color: var(--text); }
   .ico { display: inline-flex; }
 </style>

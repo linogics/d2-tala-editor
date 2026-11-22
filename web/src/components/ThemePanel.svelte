@@ -66,5 +66,5 @@
 <style>
   p { color: var(--muted); margin: 0 0 12px; }
   .warn { color: var(--warn-fg); background: var(--warn-bg); padding: 6px 8px; border-radius: 6px; }
-  h4 { margin: 16px 0 8px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 12px; font-weight: 600; color: var(--text); }
+  h4 { margin: 16px 0 8px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 0.8125rem; font-weight: 600; color: var(--text); }
 </style>

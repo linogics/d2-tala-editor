@@ -460,9 +460,9 @@
   .ghost { fill: var(--secondary-soft); stroke: var(--secondary); stroke-dasharray: 4 3; stroke-width: 2; pointer-events: none; }
   .zoom { position: absolute; left: 10px; bottom: 10px; display: flex; gap: 4px; }
   .zoom button { background: var(--surface); box-shadow: var(--shadow); }
-  .pct { min-width: 4.5em; justify-content: center; font-family: var(--mono); font-size: 12px; font-variant-numeric: tabular-nums; }
-  .badge { position: absolute; bottom: 10px; right: 10px; padding: 3px 10px; background: var(--warn-bg); color: var(--warn-fg); border-radius: 999px; font-size: 12px; box-shadow: var(--shadow); }
-  .banner { position: absolute; left: 10px; right: 10px; top: 10px; display: flex; justify-content: space-between; gap: 12px; text-align: left; padding: 8px 12px; background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); border-radius: var(--radius); box-shadow: var(--shadow); font-family: var(--mono); font-size: 12px; }
+  .pct { min-width: 4.5em; justify-content: center; font-family: var(--mono); font-size: 0.8125rem; font-variant-numeric: tabular-nums; }
+  .badge { position: absolute; bottom: 10px; right: 10px; padding: 3px 10px; background: var(--warn-bg); color: var(--warn-fg); border-radius: 999px; font-size: 0.8125rem; box-shadow: var(--shadow); }
+  .banner { position: absolute; left: 10px; right: 10px; top: 10px; display: flex; justify-content: space-between; gap: 12px; text-align: left; padding: 8px 12px; background: var(--danger-bg); color: var(--danger); border: 1px solid var(--danger); border-radius: var(--radius); box-shadow: var(--shadow); font-family: var(--mono); font-size: 0.8125rem; }
   .banner:hover { border-color: var(--danger); text-decoration: underline; }
   .more { flex: none; opacity: 0.8; }
 </style>

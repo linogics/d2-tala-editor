@@ -36,7 +36,7 @@
 <style>
   .box { display: flex; flex-direction: column; min-height: 0; background: var(--surface); border-right: 1px solid var(--border); }
   .list { padding: 4px 8px 12px; overflow-y: auto; }
-  h4 { margin: 12px 6px 4px; font-size: 12px; font-weight: 600; color: var(--muted); }
+  h4 { margin: 12px 6px 4px; font-size: 0.8125rem; font-weight: 600; color: var(--muted); }
   .item { display: flex; align-items: center; gap: 8px; padding: 5px 8px; cursor: grab; border-radius: 6px; border: 1px solid transparent; transition: background 0.12s, border-color 0.12s; }
   .item:hover { background: var(--primary-soft); border-color: var(--primary-soft); }
   .item:active { cursor: grabbing; }

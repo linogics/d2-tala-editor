@@ -178,9 +178,9 @@
   p { color: var(--muted); margin: 0 0 12px; }
   button { margin-top: 8px; }
   .classes { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-bottom: 10px; }
-  .lbl { width: 100%; font-size: 12px; font-weight: 500; color: var(--muted); }
-  .chip { display: inline-flex; align-items: center; gap: 2px; padding: 1px 2px 1px 8px; border-radius: 999px; background: var(--secondary-soft); color: var(--secondary); font-size: 12px; }
+  .lbl { width: 100%; font-size: 0.8125rem; font-weight: 500; color: var(--muted); }
+  .chip { display: inline-flex; align-items: center; gap: 2px; padding: 1px 2px 1px 8px; border-radius: 999px; background: var(--secondary-soft); color: var(--secondary); font-size: 0.8125rem; }
   .chip button { margin: 0; padding: 0 5px; border: 0; background: none; color: inherit; line-height: 1.4; }
-  .none { font-size: 12px; color: var(--muted); }
+  .none { font-size: 0.8125rem; color: var(--muted); }
   .classes select { margin-top: 0; }
 </style>
